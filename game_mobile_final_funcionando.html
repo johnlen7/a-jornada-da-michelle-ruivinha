@@ -461,11 +461,33 @@
         window.addEventListener('DOMContentLoaded', updateControlsVisibility);
 
         // Suporte a touch: tap para interagir, botões visuais para mover
+        function simulateSpaceKey() {
+            // Simular tecla Space de forma mais direta
+            if (window.game && window.game.keys) {
+                window.game.keys['Space'] = true;
+                console.log('🔥 Space key ativado no game.keys');
+                
+                // Desativar após um pequeno delay
+                setTimeout(() => {
+                    if (window.game && window.game.keys) {
+                        window.game.keys['Space'] = false;
+                        console.log('🔥 Space key desativado no game.keys');
+                    }
+                }, 150);
+            }
+        }
+        
         function simulateKey(key) {
             const keyCode = {
                 'up': 38, 'down': 40, 'left': 37, 'right': 39, 'space': 32
             }[key];
             if (!keyCode) return;
+            
+            // Para tecla space, usar método mais direto
+            if (key === 'space') {
+                simulateSpaceKey();
+                return;
+            }
             
             // Criar eventos com mais propriedades para melhor compatibilidade
             const keydownEvent = new KeyboardEvent('keydown', {
@@ -513,28 +535,23 @@
                 
                 const interactBtn = document.getElementById('interactBtn');
                 if (interactBtn) {
-                    // Adicionar múltiplos event listeners para garantir funcionamento
+                    console.log('🎮 Configurando botão de interação mobile');
+                    
+                    // Evento principal de touch
                     interactBtn.addEventListener('touchstart', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('🔥 Botão de interação tocado!');
+                        
                         // Adicionar classe active para feedback visual
                         interactBtn.classList.add('active');
                         
-                        // Múltiplas formas de disparar a interação
-                        simulateKey('space');
+                        // Método principal: simular Space diretamente no game.keys
+                        simulateSpaceKey();
                         
-                        // Fallback 1: Simular tecla Space diretamente no keys do game
-                        if (window.game && window.game.keys) {
-                            window.game.keys['Space'] = true;
-                            setTimeout(() => {
-                                if (window.game && window.game.keys) {
-                                    window.game.keys['Space'] = false;
-                                }
-                            }, 150);
-                        }
-                        
-                        // Fallback 2: Chamar handleInteraction diretamente
-                        if (window.game && window.game.handleInteraction) {
+                        // Fallback: chamar handleInteraction se disponível
+                        if (window.game && typeof window.game.handleInteraction === 'function') {
+                            console.log('🔥 Chamando handleInteraction diretamente');
                             window.game.handleInteraction();
                         }
                     });
@@ -548,16 +565,18 @@
                         }, 150);
                     });
                     
-                    // Adicionar evento de click como fallback adicional
+                    // Fallback para click (caso touchstart não funcione)
                     interactBtn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('🔥 Botão de interação clicado (fallback)!');
                         
-                        // Múltiplas formas de disparar a interação
-                        simulateKey('space');
+                        // Método principal: simular Space diretamente no game.keys
+                        simulateSpaceKey();
                         
-                        // Fallback: chamar handleInteraction diretamente
-                        if (window.game && window.game.handleInteraction) {
+                        // Fallback: chamar handleInteraction se disponível
+                        if (window.game && typeof window.game.handleInteraction === 'function') {
+                            console.log('🔥 Chamando handleInteraction diretamente (fallback)');
                             window.game.handleInteraction();
                         }
                     });
