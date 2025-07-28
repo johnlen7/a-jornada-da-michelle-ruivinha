@@ -35,6 +35,129 @@
             width: 90%;
         }
         
+        .login-container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid #ff6b6b;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            max-width: 500px;
+            width: 90%;
+            animation: pulse-border 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse-border {
+            from { 
+                border-color: #ff6b6b;
+                box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
+            }
+            to { 
+                border-color: #ee5a24;
+                box-shadow: 0 0 40px rgba(238, 90, 36, 0.7);
+            }
+        }
+        
+        .login-subtitle {
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            color: #ccc;
+        }
+        
+        .login-form {
+            margin-bottom: 30px;
+        }
+        
+        #passwordInput {
+            width: 100%;
+            max-width: 300px;
+            padding: 15px 20px;
+            font-size: 1.2em;
+            font-family: 'Pixelify Sans', cursive;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #666;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        #passwordInput:focus {
+            outline: none;
+            border-color: #FFD700;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        
+        #passwordInput::placeholder {
+            color: #888;
+        }
+        
+        .login-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: 3px solid #ff6b6b;
+            border-radius: 10px;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.3em;
+            font-family: 'Pixelify Sans', cursive;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+        }
+        
+        .login-button:hover {
+            background: linear-gradient(45deg, #ee5a24, #c44222);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .login-button:active {
+            transform: translateY(0);
+        }
+        
+        .error-message {
+            color: #ff4757;
+            font-size: 1em;
+            margin-top: 15px;
+            font-weight: bold;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .login-footer {
+            font-size: 0.9em;
+            color: #888;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid #ff6b6b;
+            border-radius: 5px;
+            color: #ff6b6b;
+            padding: 8px 15px;
+            font-size: 0.9em;
+            font-family: 'Pixelify Sans', cursive;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 107, 107, 0.3);
+            transform: scale(1.05);
+        }
+        
         h1 {
             font-size: 2.5em;
             margin-bottom: 20px;
@@ -154,7 +277,27 @@
 <body>
     <div class="sparkles" id="sparkles"></div>
     
-    <div class="container">
+    <!-- Tela de Login -->
+    <div class="login-container" id="loginContainer">
+        <h1>🔐 Acesso Restrito 🔐</h1>
+        <p class="login-subtitle">Digite a senha mágica para acessar a Jornada de Michelle</p>
+        
+        <div class="login-form">
+            <input type="password" id="passwordInput" placeholder="🗝️ Senha Mágica" maxlength="20">
+            <button id="loginBtn" class="login-button">
+                <span class="icon">✨</span>
+                <span>Entrar na Aventura</span>
+            </button>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+        
+        <div class="login-footer">
+            <p>🌟 Apenas membros autorizados podem acessar 🌟</p>
+        </div>
+    </div>
+    
+    <!-- Tela Principal (inicialmente oculta) -->
+    <div class="container" id="gameContainer" style="display: none;">
         <h1>🏰 A Jornada de Michelle 🏰</h1>
         <p class="subtitle">Escolha sua plataforma para começar a aventura!</p>
         
@@ -176,10 +319,109 @@
         
         <div class="footer">
             <p>✨ Cada versão foi otimizada para sua plataforma ✨</p>
+            <button id="logoutBtn" class="logout-btn">🔓 Sair</button>
         </div>
     </div>
 
     <script>
+        // Configuração da senha (você pode alterar aqui)
+        const CORRECT_PASSWORD = "michelle2025"; // ALTERE ESTA SENHA!
+        
+        // Elementos DOM
+        const loginContainer = document.getElementById('loginContainer');
+        const gameContainer = document.getElementById('gameContainer');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Verificar se já está logado (sessionStorage)
+        function checkLoginStatus() {
+            const isLoggedIn = sessionStorage.getItem('michelleGameAccess') === 'granted';
+            if (isLoggedIn) {
+                showGameContainer();
+            }
+        }
+        
+        // Mostrar tela do jogo
+        function showGameContainer() {
+            loginContainer.style.display = 'none';
+            gameContainer.style.display = 'block';
+        }
+        
+        // Mostrar tela de login
+        function showLoginContainer() {
+            loginContainer.style.display = 'block';
+            gameContainer.style.display = 'none';
+            passwordInput.value = '';
+            errorMessage.textContent = '';
+        }
+        
+        // Verificar senha
+        function checkPassword() {
+            const enteredPassword = passwordInput.value.trim();
+            
+            if (enteredPassword === '') {
+                showError('Por favor, digite a senha!');
+                return;
+            }
+            
+            if (enteredPassword === CORRECT_PASSWORD) {
+                // Senha correta
+                sessionStorage.setItem('michelleGameAccess', 'granted');
+                showGameContainer();
+                
+                // Efeito de sucesso
+                loginBtn.style.background = 'linear-gradient(45deg, #2ed573, #1e8449)';
+                loginBtn.innerHTML = '<span class="icon">🎉</span><span>Acesso Liberado!</span>';
+                
+                setTimeout(() => {
+                    loginBtn.style.background = '';
+                    loginBtn.innerHTML = '<span class="icon">✨</span><span>Entrar na Aventura</span>';
+                }, 1000);
+                
+            } else {
+                // Senha incorreta
+                showError('❌ Senha incorreta! Tente novamente.');
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                // Efeito visual de erro
+                passwordInput.style.borderColor = '#ff4757';
+                setTimeout(() => {
+                    passwordInput.style.borderColor = '';
+                }, 2000);
+            }
+        }
+        
+        // Mostrar mensagem de erro
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.animation = 'none';
+            setTimeout(() => {
+                errorMessage.style.animation = 'shake 0.5s ease-in-out';
+            }, 10);
+        }
+        
+        // Event listeners
+        loginBtn.addEventListener('click', checkPassword);
+        
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+        
+        logoutBtn.addEventListener('click', function() {
+            sessionStorage.removeItem('michelleGameAccess');
+            showLoginContainer();
+        });
+        
+        // Focar no input ao carregar
+        passwordInput.addEventListener('focus', function() {
+            errorMessage.textContent = '';
+        });
+        
         // Criar efeito de estrelas caindo
         function createSparkle() {
             const sparkle = document.createElement('div');
@@ -208,12 +450,24 @@
             const isTablet = /iPad|Android(?=.*Tablet)|(?=.*\bTablet\b)/.test(navigator.userAgent);
             
             if (isMobile || isTablet) {
-                document.querySelector('.subtitle').innerHTML = 
-                    'Dispositivo móvel detectado! 📱<br>Recomendamos a versão Mobile/Tablet';
+                const subtitle = document.querySelector('#gameContainer .subtitle');
+                if (subtitle) {
+                    subtitle.innerHTML = 
+                        'Dispositivo móvel detectado! 📱<br>Recomendamos a versão Mobile/Tablet';
+                }
             }
         }
         
-        detectDevice();
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            detectDevice();
+            
+            // Focar no input após carregar
+            setTimeout(() => {
+                passwordInput.focus();
+            }, 500);
+        });
     </script>
 </body>
 </html>
