@@ -466,9 +466,29 @@
                 'up': 38, 'down': 40, 'left': 37, 'right': 39, 'space': 32
             }[key];
             if (!keyCode) return;
-            document.dispatchEvent(new KeyboardEvent('keydown', {key: key, keyCode, which: keyCode, bubbles: true}));
+            
+            // Criar eventos com mais propriedades para melhor compatibilidade
+            const keydownEvent = new KeyboardEvent('keydown', {
+                key: key === 'space' ? ' ' : key,
+                code: key === 'space' ? 'Space' : 'Arrow' + key.charAt(0).toUpperCase() + key.slice(1),
+                keyCode: keyCode,
+                which: keyCode,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            const keyupEvent = new KeyboardEvent('keyup', {
+                key: key === 'space' ? ' ' : key,
+                code: key === 'space' ? 'Space' : 'Arrow' + key.charAt(0).toUpperCase() + key.slice(1),
+                keyCode: keyCode,
+                which: keyCode,
+                bubbles: true,
+                cancelable: true
+            });
+            
+            document.dispatchEvent(keydownEvent);
             setTimeout(() => {
-                document.dispatchEvent(new KeyboardEvent('keyup', {key: key, keyCode, which: keyCode, bubbles: true}));
+                document.dispatchEvent(keyupEvent);
             }, 100);
         }
         // Botões visuais com feedback visual aprimorado
@@ -493,19 +513,53 @@
                 
                 const interactBtn = document.getElementById('interactBtn');
                 if (interactBtn) {
+                    // Adicionar múltiplos event listeners para garantir funcionamento
                     interactBtn.addEventListener('touchstart', function(e) {
                         e.preventDefault();
+                        e.stopPropagation();
                         // Adicionar classe active para feedback visual
                         interactBtn.classList.add('active');
+                        
+                        // Múltiplas formas de disparar a interação
                         simulateKey('space');
+                        
+                        // Fallback 1: Simular tecla Space diretamente no keys do game
+                        if (window.game && window.game.keys) {
+                            window.game.keys['Space'] = true;
+                            setTimeout(() => {
+                                if (window.game && window.game.keys) {
+                                    window.game.keys['Space'] = false;
+                                }
+                            }, 150);
+                        }
+                        
+                        // Fallback 2: Chamar handleInteraction diretamente
+                        if (window.game && window.game.handleInteraction) {
+                            window.game.handleInteraction();
+                        }
                     });
                     
                     interactBtn.addEventListener('touchend', function(e) {
                         e.preventDefault();
+                        e.stopPropagation();
                         // Remover classe active após pequeno delay
                         setTimeout(() => {
                             interactBtn.classList.remove('active');
                         }, 150);
+                    });
+                    
+                    // Adicionar evento de click como fallback adicional
+                    interactBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Múltiplas formas de disparar a interação
+                        simulateKey('space');
+                        
+                        // Fallback: chamar handleInteraction diretamente
+                        if (window.game && window.game.handleInteraction) {
+                            window.game.handleInteraction();
+                        }
                     });
                 }
                 
