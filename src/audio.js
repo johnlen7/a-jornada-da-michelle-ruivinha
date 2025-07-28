@@ -6,8 +6,8 @@ class AudioManager {
         this.soundEnabled = true;
         this.currentAudio = null;
         this.musicFiles = {
-            hogwarts: new Audio('./hogwarts.mp3'),
-            centralperk: new Audio('./centralperk.mp3')
+            hogwarts: new Audio('./assets/audio/hogwarts.mp3'),
+            centralperk: new Audio('./assets/audio/centralperk.mp3')
         };
         this.audioInitialized = false;
         this.initAudioContext();
@@ -59,11 +59,11 @@ class AudioManager {
         // Lidar com erros
         this.musicFiles.hogwarts.addEventListener('error', (e) => {
             console.log('❌ Erro ao carregar Hogwarts MP3:', e);
-            console.log('❌ Arquivo não encontrado ou inacessível: hogwarts.mp3');
+            console.log('❌ Arquivo não encontrado ou inacessível: assets/audio/hogwarts.mp3');
         });
         this.musicFiles.centralperk.addEventListener('error', (e) => {
             console.log('❌ Erro ao carregar Central Perk MP3:', e);
-            console.log('❌ Arquivo não encontrado ou inacessível: centralperk.mp3');
+            console.log('❌ Arquivo não encontrado ou inacessível: assets/audio/centralperk.mp3');
         });
         
         // Testar se arquivos existem

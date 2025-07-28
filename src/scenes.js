@@ -42,9 +42,9 @@ class SceneRenderer {
             caminhoforte: new Image(),
             fortecopacabana: new Image()
         };
-        this.mapHouseImages.hogwarts.src = 'casa_hogwarts.png';
-        this.mapHouseImages.centralperk.src = 'centralperk.png';
-        this.mapHouseImages.caminhoforte.src = 'caminho_forte.png';
+        this.mapHouseImages.hogwarts.src = 'assets/images/casa_hogwarts.png';
+        this.mapHouseImages.centralperk.src = 'assets/images/centralperk.png';
+        this.mapHouseImages.caminhoforte.src = 'assets/images/caminho_forte.png';
         this.mapHouseImages.fortecopacabana.src = 'assets/images/forte_copacabana.png';
 
         // Carregar imagem da carroçinha de churros
@@ -681,7 +681,7 @@ class SceneRenderer {
         // Adicionar quadro do Dumbledore ao lado da janela esquerda, 20px de distância, mesma altura
         if (!this.dumbledoreQuadroImg) {
             this.dumbledoreQuadroImg = new Image();
-            this.dumbledoreQuadroImg.src = 'dumbledore_quadro_foto.png';
+            this.dumbledoreQuadroImg.src = 'assets/images/dumbledore_quadro_foto.png';
         }
         // Subir o quadro 5px (y=55)
         if (this.dumbledoreQuadroImg.complete && this.dumbledoreQuadroImg.naturalWidth) {
@@ -1559,6 +1559,21 @@ class SceneRenderer {
         }
           // === DESENHAR JOHN LENNON NO TOPO DO CAMINHO ===
         if (this.johnSprite && this.johnSprite.complete && this.johnSprite.naturalWidth) {
+            // === DESENHAR CORAÇÃO GRANDE ATRÁS DO JOHN LENNON ===
+            ctx.save();
+            ctx.globalAlpha = 0.85;
+            ctx.beginPath();
+            // Coração estilizado (duas metades)
+            ctx.moveTo(johnX, johnY);
+            ctx.bezierCurveTo(johnX - 64, johnY - 64, johnX - 64, johnY + 48, johnX, johnY + 96);
+            ctx.bezierCurveTo(johnX + 64, johnY + 48, johnX + 64, johnY - 64, johnX, johnY);
+            ctx.closePath();
+            ctx.fillStyle = '#ff3366';
+            ctx.shadowColor = '#ffb6c1';
+            ctx.shadowBlur = 30;
+            ctx.fill();
+            ctx.restore();
+
             // Suave brilho dourado ao redor do John
             var glowRadius = 40 + Math.sin(Date.now() * 0.002) * 5;
             var gradient = ctx.createRadialGradient(
