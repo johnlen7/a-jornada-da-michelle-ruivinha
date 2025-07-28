@@ -6,14 +6,14 @@ class SceneRenderer {
         
         // Carregar sprite da Michelle
         this.michelleSprite = new Image();
-        this.michelleSprite.src = 'michelle_sprite.png';
+        this.michelleSprite.src = 'assets/images/michelle_sprite.png';
         this.michelleSprite.onerror = () => {
             console.log('Erro ao carregar sprite da Michelle, usando fallback');
         };
 
         // Carregar sprite do John
         this.johnSprite = new Image();
-        this.johnSprite.src = 'sprite_johnlennon.png';
+        this.johnSprite.src = 'assets/images/sprite_johnlennon.png';
 
         // Carregar imagens de Hogwarts
         this.hogwartsImages = {
@@ -23,10 +23,10 @@ class SceneRenderer {
             bookshelf: new Image()
         };
         
-        this.hogwartsImages.bed.src = 'cama_hogwarts.png';
-        this.hogwartsImages.sortingHat.src = 'chapeu_seletor.png';
-        this.hogwartsImages.banner.src = 'banner_corvinal.png';
-        this.hogwartsImages.bookshelf.src = 'estante_livros.png';
+        this.hogwartsImages.bed.src = 'assets/images/cama_hogwarts.png';
+        this.hogwartsImages.sortingHat.src = 'assets/images/chapeu_seletor.png';
+        this.hogwartsImages.banner.src = 'assets/images/banner_corvinal.png';
+        this.hogwartsImages.bookshelf.src = 'assets/images/estante_livros.png';
         
         // Error handling para imagens
         Object.entries(this.hogwartsImages).forEach(([key, img]) => {
@@ -45,11 +45,11 @@ class SceneRenderer {
         this.mapHouseImages.hogwarts.src = 'casa_hogwarts.png';
         this.mapHouseImages.centralperk.src = 'centralperk.png';
         this.mapHouseImages.caminhoforte.src = 'caminho_forte.png';
-        this.mapHouseImages.fortecopacabana.src = 'forte_copacabana.png';
+        this.mapHouseImages.fortecopacabana.src = 'assets/images/forte_copacabana.png';
 
         // Carregar imagem da carroçinha de churros
         this.churrosCartImg = new Image();
-        this.churrosCartImg.src = 'churros.png';
+        this.churrosCartImg.src = 'assets/images/churros.png';
     }
     
     // Desenhar tela inicial
@@ -1300,40 +1300,7 @@ class SceneRenderer {
         ctx.lineTo(johnX + pathWidth/3, pathEndY);
         ctx.stroke();
         
-        // === DESENHAR JOHN LENNON NO TOPO DO CAMINHO ===
-        // Ajustado Y para descer 20px
-        var johnY = canvas.height * 0.45;
-        var johnYAdjusted = johnY + 20;
-        // Desenhar coração grande atrás do John Lennon
-        ctx.save();
-        ctx.globalAlpha = 0.85;
-        ctx.beginPath();
-        // Coração estilizado (duas metades)
-        ctx.moveTo(johnX, johnYAdjusted);
-        ctx.bezierCurveTo(johnX - 64, johnYAdjusted - 64, johnX - 64, johnYAdjusted + 48, johnX, johnYAdjusted + 96);
-        ctx.bezierCurveTo(johnX + 64, johnYAdjusted + 48, johnX + 64, johnYAdjusted - 64, johnX, johnYAdjusted);
-        ctx.closePath();
-        ctx.fillStyle = '#ff3366';
-        ctx.shadowColor = '#ffb6c1';
-        ctx.shadowBlur = 30;
-        ctx.fill();
-        ctx.restore();
-        
-        if (this.johnSprite && this.johnSprite.complete && this.johnSprite.naturalWidth) {
-            // Brilho dourado ao redor do sprite
-            ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-            ctx.beginPath();
-            ctx.arc(johnX, johnYAdjusted, 40, 0, Math.PI * 2);
-            ctx.fill();
-            // Desenhar o sprite do John na nova posição
-            ctx.drawImage(this.johnSprite, johnX - 32, johnYAdjusted - 64, 64, 64);
-        } else {
-            // Fallback se a imagem não carregar
-            ctx.fillStyle = '#FF0000';
-            ctx.beginPath();
-            ctx.arc(johnX, johnYAdjusted, 32, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        // === JOHN LENNON SERÁ RENDERIZADO MAIS ABAIXO COM EFEITO DE GLOW ===
           // === OCEANO COM GRADIENTE ===
         var oceanGradient = ctx.createLinearGradient(0, canvas.height * 0.6, 0, canvas.height);
         oceanGradient.addColorStop(0, '#1E90FF');  // Azul mais claro na superfície
