@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Jornada de Michelle</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 4px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: #000;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: auto;
+            max-width: 800px;
+            max-height: 600px;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .dialog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 500px;
+            text-align: center;
+            pointer-events: auto;
+            display: none;
+        }
+        
+        .dialog h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .dialog p {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .option-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .option-btn:hover {
+            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+            transform: scale(1.05);
+        }
+        
+        .option-btn.correct {
+            background: linear-gradient(45deg, #00d2d3, #54a0ff);
+        }
+        
+        .option-btn.wrong {
+            background: linear-gradient(45deg, #ff3838, #ff6b6b);
+        }
+        
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+        
+        .level-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #ffd700;
+        }
+        
+        .interaction-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: none;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+        }
+        
+        .fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: firework 2s ease-out forwards;
+        }
+        
+        @keyframes firework {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+        
+        .final-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 4px solid #ffd700;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            display: none;
+            z-index: 30;
+            max-width: 600px;
+        }
+        
+        .final-message h2 {
+            color: #ffd700;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .final-message p {
+            font-size: 18px;
+            line-height: 1.5;
+            color: #ff69b4;
+        }
+        
+        /* Botão de Som */
+        .sound-toggle {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ffd700;
+            border-radius: 50px;
+            color: #ffd700;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            z-index: 100;
+        }
+        
+        .sound-toggle:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateX(-50%) scale(1.05);
+        }
+        
+        .sound-toggle.muted {
+            background: rgba(255, 0, 0, 0.8);
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+        
+        /* Controles Móveis */
+        .mobile-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 15px;
+            pointer-events: auto;
+            z-index: 50;
+        }
+        
+        .d-pad {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 2px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 10px;
+        }
+        
+        .d-pad-btn {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #333, #666);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            color: #ffd700;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+        
+        .d-pad-btn:active {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #000;
+            transform: scale(0.95);
+        }
+        
+        /* .d-pad-btn:nth-child(2) { UP } */
+        /* .d-pad-btn:nth-child(4) { LEFT } */
+        .d-pad-btn:nth-child(5) { /* CENTER - vazio */ 
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+        /* .d-pad-btn:nth-child(6) { RIGHT } */
+        /* .d-pad-btn:nth-child(8) { DOWN } */
+        
+        .interact-btn {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .interact-btn:active {
+            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+            transform: scale(0.95);
+        }
+        
+        /* Responsividade */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            #gameContainer {
+                border-width: 2px;
+                width: 100%;
+                max-width: 100vw;
+            }
+            
+            .mobile-controls {
+                display: flex;
+                bottom: 5px;
+            }
+            
+            .controls {
+                display: none;
+            }
+            
+            .level-indicator {
+                font-size: 12px;
+                padding: 8px;
+                top: 50px;
+            }
+            
+            .sound-toggle {
+                top: 5px;
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .d-pad-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            
+            .interact-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 10px;
+            }
+            
+            .dialog {
+                max-width: 90%;
+                padding: 15px;
+                bottom: 10px;
+            }
+            
+            .dialog h3 {
+                font-size: 16px;
+            }
+            
+            .dialog p {
+                font-size: 14px;
+            }
+            
+            .option-btn {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="ui">
+            <div class="sound-toggle" id="soundToggle">🔊 SOM</div>
+            
+            <div class="controls">
+                <div>Use ↑↓←→ para mover</div>
+                <div>ESPAÇO para interagir</div>
+            </div>
+            
+            <div class="level-indicator" id="levelIndicator">
+                Vila Mágica do Amor ❤️
+            </div>
+            
+            <div class="interaction-hint" id="interactionHint">
+                Pressione ESPAÇO para interagir
+            </div>
+            
+            <div class="dialog" id="questionDialog">
+                <h3 id="questionTitle">Pergunta</h3>
+                <p id="questionText"></p>
+                <div class="options" id="questionOptions"></div>
+                <p id="questionResult"></p>
+            </div>
+            
+            <div class="final-message" id="finalMessage">
+                <h2>💖 Parabéns! 💖</h2>
+                <p>Não é fim de jogo...<br>é o começo de uma nova jornada ❤️</p>
+            </div>
+            
+            <div class="mobile-controls" id="mobileControls">
+                <div class="d-pad">
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="up">↑</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="left">←</div>
+                    <div class="d-pad-btn"></div>
+                    <div class="d-pad-btn" data-direction="right">→</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="down">↓</div>
+                    <div></div>
+                </div>
+                <div class="interact-btn" id="interactBtn">
+                    ESPAÇO<br>
+                    <small>Interagir</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="fireworks" id="fireworks"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Carregando imagens
+        const images = {
+            banner: new Image(),
+            cama: new Image(),
+            chapeu: new Image(),
+            estante: new Image(),
+            michelle: new Image()
+        };
+
+        images.banner.src = './banner_corvinal.png';
+        images.cama.src = './cama_hogwarts.png';
+        images.chapeu.src = './chapeu_seletor.png';
+        images.estante.src = './estante_livros.png';
+        images.michelle.src = './michelle_sprite.png';
+
+        // Sistema de áudio
+        const sounds = {
+            bgMusic: null,
+            move: null,
+            interact: null,
+            correct: null,
+            wrong: null,
+            fireworks: null
+        };
+
+        // Criar sons usando Web Audio API
+        function createAudioContext() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                return audioContext;
+            } catch (e) {
+                console.log('Web Audio API não suportado');
+                return null;
+            }
+        }
+
+        let audioContext = null;
+
+        // Função para criar sons sintéticos
+        function createTone(frequency, duration, type = 'sine') {
+            if (!audioContext || !gameState.soundEnabled) return;
+            
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        // Sons específicos
+        function playMoveSound() {
+            if (gameState.soundEnabled) createTone(200, 0.1, 'square');
+        }
+
+        function playInteractSound() {
+            if (gameState.soundEnabled) createTone(400, 0.2, 'sine');
+        }
+
+        function playCorrectSound() {
+            if (!gameState.soundEnabled) return;
+            createTone(523, 0.3, 'sine'); // C5
+            setTimeout(() => createTone(659, 0.3, 'sine'), 100); // E5
+            setTimeout(() => createTone(784, 0.4, 'sine'), 200); // G5
+        }
+
+        function playWrongSound() {
+            if (gameState.soundEnabled) createTone(200, 0.5, 'sawtooth');
+        }
+
+        function playFireworksSound() {
+            if (!gameState.soundEnabled) return;
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createTone(800 + Math.random() * 400, 0.3, 'square');
+                }, i * 200);
+            }
+        }
+
+        function stopBackgroundMusic() {
+            // Parar música sintética
+            if (gameState.musicInterval) {
+                clearInterval(gameState.musicInterval);
+                gameState.musicInterval = null;
+            }
+            
+            // Parar música MP3
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
+        }
+
+        function playBackgroundMusic(forceRestart = false) {
+            if (!gameState.soundEnabled) return;
+            
+            // Parar música anterior sempre
+            stopBackgroundMusic();
+            
+            let melody, tempo, audioFile;
+            
+            // Selecionar melodia baseada no local atual
+            if (gameState.currentScreen === 'level') {
+                switch(gameState.currentLevel) {
+                    case 0: // Hogwarts - Usar arquivo MP3
+                        console.log('🏰 Tocando música de Hogwarts (jogo_desktop)');
+                        if (typeof audioManager !== 'undefined' && audioManager.musicFiles) {
+                            audioFile = audioManager.musicFiles.hogwarts;
+                        } else {
+                            // Fallback para música sintética
+                            melody = [523, 659, 784, 659, 698, 784, 880, 784, 659, 523];
+                            tempo = 900;
+                        }
+                        break;
+                    case 1: // Central Perk - Usar arquivo MP3
+                        console.log('☕ Tocando música de Central Perk (jogo_desktop)');
+                        if (typeof audioManager !== 'undefined' && audioManager.musicFiles) {
+                            audioFile = audioManager.musicFiles.centralperk;
+                        } else {
+                            // Fallback para música sintética
+                            melody = [523, 587, 659, 698, 659, 587, 523, 659, 698, 784];
+                            tempo = 500;
+                        }
+                        break;
+                    case 2: // Caminho para o Forte - Tema aventura épica
+                        melody = [440, 523, 659, 784, 698, 659, 523, 587, 659, 440];
+                        tempo = 600;
+                        break;
+                    case 3: // Forte - Tema romântico e épico
+                        melody = [523, 659, 784, 880, 1047, 880, 784, 659, 698, 523];
+                        tempo = 1000;
+                        break;
+                    default:
+                        melody = [523, 587, 659, 698, 784, 698, 659, 587];
+                        tempo = 600;
+                }
+            } else {
+                // Música do mapa principal - tema de vila mágica
+                melody = [523, 587, 659, 698, 784, 698, 659, 587, 523, 659];
+                tempo = 700;
+            }
+            
+            // Se há um arquivo de áudio, tocar ele
+            if (audioFile) {
+                console.log(`🎶 Tentando tocar arquivo MP3: ${audioFile.src}`);
+                currentAudio = audioFile;
+                audioFile.currentTime = 0;
+                
+                const playPromise = audioFile.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => {
+                            console.log(`✅ Música MP3 iniciada com sucesso`);
+                        })
+                        .catch(e => {
+                            console.log('❌ Erro ao tocar MP3, usando fallback sintético:', e);
+                            playBgMusicSynthetic(melody, tempo);
+                        });
+                }
+                return;
+            }
+            
+            // Tocar música sintética se não há arquivo MP3
+            if (melody && tempo) {
+                playBgMusicSynthetic(melody, tempo);
+            }
+        }
+        
+        function playBgMusicSynthetic(melody, tempo) {
+            if (!audioContext) return;
+            
+            let noteIndex = 0;
+            
+            function playNextNote() {
+                if (gameState.soundEnabled && gameState.currentScreen !== 'start') {
+                    createTone(melody[noteIndex], 0.5, 'triangle');
+                    noteIndex = (noteIndex + 1) % melody.length;
+                }
+            }
+            
+            // Tocar primeira nota imediatamente
+            playNextNote();
+            
+            // Configurar intervalo para próximas notas
+            gameState.musicInterval = setInterval(playNextNote, tempo);
+        }
+
+        let imagesLoaded = 0;
+        const totalImages = Object.keys(images).length;
+
+        Object.values(images).forEach(img => {
+            img.onload = () => {
+                imagesLoaded++;
+                if (imagesLoaded === totalImages) {
+                    console.log('Todas as imagens carregadas!');
+                }
+            };
+            img.onerror = (e) => {
+                console.error('Erro ao carregar imagem:', e.target.src);
+                imagesLoaded++;
+                if (imagesLoaded === totalImages) {
+                    console.log('Carregamento de imagens finalizado (com erros)');
+                }
+            };
+        });
+        
+        // Game state
+        let gameState = {
+            currentScreen: 'start', // 'start', 'map' or 'level'
+            currentLevel: -1,
+            questionsAnswered: [false, false, false],
+            playerX: 400,
+            playerY: 300,
+            playerDirection: 'down',
+            isMoving: false,
+            canMove: false,
+            animationFrame: 0,
+            interactionActive: false,
+            treasureGlowing: false,
+            gameStarted: false,
+            soundEnabled: true,
+            musicInterval: null
+        };
+        
+        // Initialize AudioManager for MP3 support
+        let audioManager;
+        let currentAudio = null;
+        
+        // Initialize audio manager when available
+        if (typeof AudioManager !== 'undefined') {
+            audioManager = new AudioManager();
+            console.log('🎵 AudioManager inicializado para jogo_desktop');
+        } else {
+            console.log('⚠️ AudioManager não encontrado, usando apenas áudio sintético');
+        }
+        
+        // Questions data
+        const questions = [
+            {
+                title: "Primeira Lembrança ❤️",
+                text: "Qual a data do nosso primeiro beijo?",
+                options: ["05/08/19", "08/09/19", "10/09/19", "15/08/19"],
+                correct: 1
+            },
+            {
+                title: "Nossos Apelidos 🐰",
+                text: "Quais eram nossos apelidos?",
+                options: ["Gatinho e Gatinha", "Coelhinho e Cenourinha", "Docinho e Benzinho", "Amor e Paixão"],
+                correct: 1
+            },
+            {
+                title: "Pedido de Namoro 💕",
+                text: "Quando foi o pedido de namoro?",
+                options: ["20/10/19", "22/10/19", "25/10/19", "18/10/19"],
+                correct: 1
+            }
+        ];
+        
+        // Map locations
+        const mapLocations = [
+            { 
+                name: "Quarto Hogwarts", 
+                x: 150, 
+                y: 200, 
+                unlocked: true,
+                color: "#8B4513",
+                houseColor: "#654321"
+            },
+            { 
+                name: "Central Perk", 
+                x: 650, 
+                y: 200, 
+                unlocked: false,
+                color: "#FF8C00",
+                houseColor: "#CD853F"
+            },
+            { 
+                name: "Caminho Forte", 
+                x: 400, 
+                y: 100, 
+                unlocked: false,
+                color: "#4682B4",
+                houseColor: "#5F9EA0"
+            },
+            { 
+                name: "Forte Copacabana", 
+                x: 400, 
+                y: 450, 
+                unlocked: false,
+                color: "#DAA520",
+                houseColor: "#B8860B",
+                isFort: true
+            }
+        ];
+        
+        // Level environments
+        const levels = [
+            { name: "Quarto Hogwarts", color: "#2F1B69", npcX: 360, npcY: 380 }, // Na mesa central
+            { name: "Central Perk", color: "#FF8C00", npcX: 400, npcY: 380 }, // No sofá central
+            { name: "Caminho para o Forte", color: "#4682B4", npcX: 400, npcY: 480 }, // Na trilha
+            { name: "Forte Copacabana", color: "#1e3a8a", npcX: 400, npcY: 250 } // Na torre central
+        ];
+        
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            
+            // Start game on any key press
+            if (!gameState.gameStarted && gameState.currentScreen === 'start') {
+                audioContext = createAudioContext();
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                gameState.gameStarted = true;
+                gameState.currentScreen = 'map';
+                gameState.canMove = true;
+                updateLevelIndicator();
+                playBackgroundMusic();
+                playInteractSound();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Sistema de controles móveis
+        function initializeMobileControls() {
+            // Botão de som
+            const soundToggle = document.getElementById('soundToggle');
+            soundToggle.addEventListener('click', () => {
+                gameState.soundEnabled = !gameState.soundEnabled;
+                soundToggle.textContent = gameState.soundEnabled ? '🔊 SOM' : '🔇 MUDO';
+                soundToggle.classList.toggle('muted', !gameState.soundEnabled);
+                
+                if (gameState.soundEnabled) {
+                    playInteractSound();
+                    // Reativar música se o jogo já começou
+                    if (gameState.gameStarted && gameState.currentScreen !== 'start') {
+                        playBackgroundMusic(true);
+                    }
+                } else {
+                    // Parar música quando som é desabilitado
+                    stopBackgroundMusic();
+                }
+            });
+
+            // D-Pad controls
+            const dPadButtons = document.querySelectorAll('.d-pad-btn[data-direction]');
+            dPadButtons.forEach(btn => {
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const direction = btn.dataset.direction;
+                    handleMobileMovement(direction, true);
+                });
+                
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    const direction = btn.dataset.direction;
+                    handleMobileMovement(direction, false);
+                });
+                
+                // Mouse events for desktop testing
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    const direction = btn.dataset.direction;
+                    handleMobileMovement(direction, true);
+                });
+                
+                btn.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    const direction = btn.dataset.direction;
+                    handleMobileMovement(direction, false);
+                });
+            });
+
+            // Interact button
+            const interactBtn = document.getElementById('interactBtn');
+            interactBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                handleInteraction();
+            });
+            
+            interactBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleInteraction();
+            });
+        }
+
+        function handleMobileMovement(direction, isPressed) {
+            const keyMap = {
+                'up': 'ArrowUp',
+                'down': 'ArrowDown',
+                'left': 'ArrowLeft',
+                'right': 'ArrowRight'
+            };
+            
+            if (keyMap[direction]) {
+                keys[keyMap[direction]] = isPressed;
+            }
+        }
+
+        function handleInteraction() {
+            if (!gameState.interactionActive) {
+                playInteractSound();
+                if (gameState.currentScreen === 'map') {
+                    checkMapInteraction();
+                } else {
+                    checkLevelInteraction();
+                }
+            }
+        }
+        
+        // Player sprite colors for different directions
+        const playerColors = {
+            hair: '#FF6B35',
+            skin: '#FDBCB4',
+            dress: '#9B59B6'
+        };
+        
+        function drawStartScreen() {
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#1a0d4d');
+            gradient.addColorStop(0.5, '#2d1810');
+            gradient.addColorStop(1, '#4a3426');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Magical sparkles background
+            for(let i = 0; i < 25; i++) {
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 
+                       1 + Math.random() * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Title
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 48px Pixelify Sans';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.strokeText('Mini Game', canvas.width/2, 150);
+            ctx.fillText('Mini Game', canvas.width/2, 150);
+            
+            ctx.fillStyle = '#FF69B4';
+            ctx.font = 'bold 32px Pixelify Sans';
+            ctx.strokeText('A Jornada de Michelle', canvas.width/2, 200);
+            ctx.fillText('A Jornada de Michelle', canvas.width/2, 200);
+            
+            // Hearts decoration
+            ctx.fillStyle = '#FF1493';
+            ctx.font = '40px Arial';
+            ctx.fillText('💖', canvas.width/2 - 150, 180);
+            ctx.fillText('💖', canvas.width/2 + 150, 180);
+            ctx.fillText('✨', canvas.width/2, 250);
+            
+            // Instructions
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '24px Pixelify Sans';
+            ctx.fillText('Aperte qualquer tecla para começar o jogo', canvas.width/2, 350);
+            
+            // Pulsing effect for instruction
+            const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
+            ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
+            ctx.font = '20px Pixelify Sans';
+            ctx.fillText('Ajude a Michelle a responder as perguntas do coração ❤️', canvas.width/2, 420);
+            
+            // Game info
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '16px Pixelify Sans';
+            ctx.fillText('Use ↑↓←→ para mover | ESPAÇO para interagir', canvas.width/2, 500);
+            
+            // Magical border
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+        }
+        
+        function drawPlayer() {
+            const x = gameState.playerX;
+            const y = gameState.playerY;
+            
+            // Use Michelle sprite image if loaded, otherwise fallback to simple pixel art
+            if (images.michelle.complete && images.michelle.naturalWidth > 0) {
+                ctx.save();
+                
+                // Movement animation
+                if (gameState.isMoving) {
+                    const offset = Math.sin(Date.now() * 0.01) * 2;
+                    ctx.translate(0, offset);
+                }
+                
+                // Draw Michelle sprite centered
+                ctx.drawImage(images.michelle, x-32, y-32, 64, 64);
+                
+                ctx.restore();
+            } else {
+                // Fallback: Simple pixel art character
+                ctx.save();
+                
+                // Hair
+                ctx.fillStyle = playerColors.hair;
+                ctx.fillRect(x-8, y-16, 16, 8);
+                
+                // Face
+                ctx.fillStyle = playerColors.skin;
+                ctx.fillRect(x-6, y-8, 12, 8);
+                
+                // Eyes
+                ctx.fillStyle = '#000';
+                ctx.fillRect(x-4, y-6, 2, 2);
+                ctx.fillRect(x+2, y-6, 2, 2);
+                
+                // Body
+                ctx.fillStyle = playerColors.dress;
+                ctx.fillRect(x-8, y, 16, 16);
+                
+                // Legs
+                ctx.fillStyle = playerColors.skin;
+                ctx.fillRect(x-6, y+16, 4, 8);
+                ctx.fillRect(x+2, y+16, 4, 8);
+                
+                // Movement animation
+                if (gameState.isMoving) {
+                    const offset = Math.sin(Date.now() * 0.01) * 2;
+                    ctx.translate(0, offset);
+                }
+                
+                ctx.restore();
+            }
+        }
+        
+        function drawMap() {
+            // Background - grass/village ground
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Village paths
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, 290, canvas.width, 20); // horizontal path
+            ctx.fillRect(390, 0, 20, canvas.height); // vertical path
+            
+            // Draw houses/locations
+            mapLocations.forEach((location, index) => {
+                drawMapLocation(location, index);
+            });
+            
+            // Check if treasure should glow
+            updateTreasureGlow();
+        }
+        
+        function drawMapLocation(location, index) {
+            const x = location.x;
+            const y = location.y;
+            
+            if (location.isFort) {
+                // Draw fort
+                if (location.unlocked) {
+                    ctx.fillStyle = location.houseColor;
+                } else {
+                    ctx.fillStyle = '#404040'; // locked color
+                }
+                
+                // Fort structure
+                ctx.fillRect(x-60, y-40, 120, 80);
+                ctx.fillRect(x-50, y-30, 100, 60);
+                
+                // Treasure chest in the middle
+                if (location.unlocked) {
+                    // Glowing effect for treasure
+                    if (gameState.treasureGlowing) {
+                        ctx.shadowColor = '#FFD700';
+                        ctx.shadowBlur = 20;
+                    }
+                    
+                    ctx.fillStyle = '#DAA520';
+                    ctx.fillRect(x-15, y-10, 30, 20);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(x-12, y-7, 24, 14);
+                    
+                    // Heart on chest
+                    ctx.fillStyle = '#FF1493';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('💖', x, y+5);
+                    
+                    ctx.shadowBlur = 0; // reset shadow
+                }
+                
+                // Fort towers
+                ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                ctx.fillRect(x-70, y-50, 20, 30);
+                ctx.fillRect(x+50, y-50, 20, 30);
+                
+            } else {
+                // Draw house
+                if (location.unlocked) {
+                    ctx.fillStyle = location.houseColor;
+                } else {
+                    ctx.fillStyle = '#404040'; // locked color
+                }
+                
+                // House base
+                ctx.fillRect(x-30, y-20, 60, 40);
+                
+                // Roof
+                ctx.fillStyle = location.unlocked ? '#8B0000' : '#2F2F2F';
+                ctx.beginPath();
+                ctx.moveTo(x-35, y-20);
+                ctx.lineTo(x, y-50);
+                ctx.lineTo(x+35, y-20);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Door
+                ctx.fillStyle = location.unlocked ? '#654321' : '#1F1F1F';
+                ctx.fillRect(x-8, y-5, 16, 25);
+                
+                // Windows
+                ctx.fillStyle = location.unlocked ? '#87CEEB' : '#2F2F2F';
+                ctx.fillRect(x-20, y-15, 8, 8);
+                ctx.fillRect(x+12, y-15, 8, 8);
+            }
+            
+            // Location name
+            ctx.fillStyle = location.unlocked ? '#FFFFFF' : '#808080';
+            ctx.font = '12px Pixelify Sans';
+            ctx.textAlign = 'center';
+            ctx.fillText(location.name, x, y+40);
+            
+            // Lock symbol for locked locations
+            if (!location.unlocked) {
+                ctx.fillStyle = '#FF0000';
+                ctx.font = '20px Arial';
+                ctx.fillText('🔒', x, y-60);
+            }
+        }
+        
+        function updateTreasureGlow() {
+            // Make treasure glow if all questions are answered
+            if (gameState.questionsAnswered[0] && 
+                gameState.questionsAnswered[1] && 
+                gameState.questionsAnswered[2]) {
+                gameState.treasureGlowing = Math.sin(Date.now() * 0.01) > 0;
+            }
+        }
+        
+        function drawLevel() {
+            const level = levels[gameState.currentLevel];
+            
+            // Background
+            ctx.fillStyle = level.color;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Level-specific decorations
+            drawLevelDecorations();
+            
+            // NPC/Interactive object
+            drawNPC();
+            
+            // Exit door
+            drawExitDoor();
+        }
+        
+        function drawExitDoor() {
+            // Exit door at the bottom
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(370, 570, 60, 30);
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('SAIR', 400, 590);
+        }
+        
+        function drawLevelDecorations() {
+            const level = gameState.currentLevel;
+            
+            switch(level) {
+                case 0: // Hogwarts Room - Layout baseado na imagem
+                    // Room background with walls and floor
+                    // Back wall
+                    ctx.fillStyle = '#2d1810';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.65);
+                    
+                    // Floor
+                    ctx.fillStyle = '#3d2b1f';
+                    ctx.fillRect(0, canvas.height * 0.65, canvas.width, canvas.height * 0.35);
+                    
+                    // Floor planks
+                    ctx.fillStyle = '#4a3426';
+                    for(let i = 0; i < 15; i++) {
+                        ctx.fillRect(0, (canvas.height * 0.65) + i*18, canvas.width, 2);
+                    }
+                    
+                    // Side walls for depth
+                    ctx.fillStyle = '#1a0d4d';
+                    ctx.fillRect(0, 0, 50, canvas.height);
+                    ctx.fillRect(canvas.width - 50, 0, 50, canvas.height);
+                    
+                    // === ESTANTE DE LIVROS (lado esquerdo como na imagem) ===
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(70, 120, 200, 180);
+                    
+                    // Prateleiras da estante
+                    ctx.fillRect(75, 140, 190, 8);
+                    ctx.fillRect(75, 180, 190, 8);
+                    ctx.fillRect(75, 220, 190, 8);
+                    ctx.fillRect(75, 260, 190, 8);
+                    
+                    // Livros organizados por prateleira
+                    const bookColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#8B008B'];
+                    for(let shelf = 0; shelf < 4; shelf++) {
+                        for(let book = 0; book < 14; book++) {
+                            ctx.fillStyle = bookColors[book % 8];
+                            ctx.fillRect(80 + book*13, 125 + shelf*40, 10, 30);
+                        }
+                    }
+                    
+                    // === JANELAS CENTRAIS (como na imagem) ===
+                    // Janela esquerda
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(350, 60, 80, 120);
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(355, 65, 35, 50);
+                    ctx.fillRect(355, 125, 35, 50);
+                    ctx.fillRect(395, 65, 35, 50);
+                    ctx.fillRect(395, 125, 35, 50);
+                    
+                    // Divisórias da janela esquerda
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(390, 65, 5, 110);
+                    ctx.fillRect(355, 115, 70, 5);
+                    
+                    // Janela direita
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(450, 60, 80, 120);
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(455, 65, 35, 50);
+                    ctx.fillRect(455, 125, 35, 50);
+                    ctx.fillRect(495, 65, 35, 50);
+                    ctx.fillRect(495, 125, 35, 50);
+                    
+                    // Divisórias da janela direita
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(490, 65, 5, 110);
+                    ctx.fillRect(455, 115, 70, 5);
+                    
+                    // === CAMA COM DOSSEL (lado direito como na imagem) ===
+                    // Base da cama
+                    ctx.fillStyle = '#4B0082';
+                    ctx.fillRect(550, 350, 180, 80);
+                    
+                    // Dossel/cortinas da cama
+                    ctx.fillStyle = '#8B0000';
+                    ctx.fillRect(545, 280, 190, 80);
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(545, 275, 190, 10);
+                    
+                    // Colunas da cama
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(545, 275, 10, 155);
+                    ctx.fillRect(725, 275, 10, 155);
+                    
+                    // Travesseiros
+                    ctx.fillStyle = '#FFE4E1';
+                    ctx.fillRect(560, 350, 40, 25);
+                    ctx.fillRect(680, 350, 40, 25);
+                    
+                    // === MESA/PEDESTAL CENTRAL (como na imagem) ===
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(320, 350, 80, 60);
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(315, 345, 90, 10);
+                    
+                    // === LAREIRA (canto direito como na imagem) ===
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(680, 140, 80, 100);
+                    ctx.fillStyle = '#2F1B14';
+                    ctx.fillRect(685, 155, 70, 70);
+                    
+                    // Fogo na lareira
+                    ctx.fillStyle = '#FF4500';
+                    ctx.fillRect(695, 200, 12, 20);
+                    ctx.fillRect(710, 195, 10, 25);
+                    ctx.fillRect(725, 205, 12, 15);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(700, 210, 8, 10);
+                    ctx.fillRect(715, 205, 6, 12);
+                    
+                    // === BANNER NA PAREDE LATERAL (como na imagem) ===
+                    ctx.fillStyle = '#000080';
+                    ctx.fillRect(20, 150, 25, 80);
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(22, 160, 21, 15);
+                    
+                    // === ELEMENTOS MÁGICOS ===
+                    // Velas flutuantes
+                    ctx.fillStyle = '#FFFACD';
+                    ctx.fillRect(200, 80, 6, 18);
+                    ctx.fillRect(300, 75, 6, 18);
+                    ctx.fillRect(580, 90, 6, 18);
+                    ctx.fillRect(650, 85, 6, 18);
+                    
+                    // Chamas das velas
+                    ctx.fillStyle = '#FFA500';
+                    ctx.fillRect(201, 75, 4, 8);
+                    ctx.fillRect(301, 70, 4, 8);
+                    ctx.fillRect(581, 85, 4, 8);
+                    ctx.fillRect(651, 80, 4, 8);
+                    
+                    // === IMAGENS SOBREPOSTAS (posicionamento baseado na imagem) ===
+                    if (images.banner.complete && images.banner.naturalWidth > 0) {
+                        // Banner na parede lateral esquerda
+                        ctx.drawImage(images.banner, 15, 150, 30, 80);
+                    }
+                    if (images.estante.complete && images.estante.naturalWidth > 0) {
+                        // Estante sobreposta
+                        ctx.drawImage(images.estante, 70, 120, 200, 180);
+                    }
+                    if (images.cama.complete && images.cama.naturalWidth > 0) {
+                        // Cama sobreposta
+                        ctx.drawImage(images.cama, 545, 275, 190, 155);
+                    }
+                    if (images.chapeu.complete && images.chapeu.naturalWidth > 0) {
+                        // Chapéu na mesa central
+                        ctx.drawImage(images.chapeu, 340, 320, 40, 40);
+                    }
+                    
+                    // Brilhos mágicos
+                    for(let i = 0; i < 10; i++) {
+                        ctx.fillStyle = '#FFD700';
+                        ctx.beginPath();
+                        ctx.arc(100 + Math.random() * 600, 50 + Math.random() * 150, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    break;
+                    
+                case 1: // Central Perk - Layout baseado na imagem enviada
+                    // === FUNDO E PAREDES ===
+                    // Parede principal (cor quente laranja/terracota)
+                    ctx.fillStyle = '#CD853F';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.7);
+                    
+                    // Piso de madeira
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(0, canvas.height * 0.7, canvas.width, canvas.height * 0.3);
+                    
+                    // Tábuas do piso
+                    ctx.fillStyle = '#A0522D';
+                    for(let i = 0; i < 8; i++) {
+                        ctx.fillRect(0, (canvas.height * 0.7) + i*25, canvas.width, 2);
+                    }
+                    
+                    // === SOFÁ LARANJA CENTRAL (principal elemento) ===
+                    // Base do sofá
+                    ctx.fillStyle = '#FF8C00';
+                    ctx.fillRect(280, 320, 240, 120);
+                    
+                    // Braços do sofá
+                    ctx.fillRect(260, 320, 20, 120);
+                    ctx.fillRect(520, 320, 20, 120);
+                    
+                    // Encosto do sofá
+                    ctx.fillRect(280, 300, 240, 20);
+                    
+                    // Almofadas do sofá
+                    ctx.fillStyle = '#FF7F00';
+                    ctx.fillRect(290, 330, 45, 80);
+                    ctx.fillRect(345, 330, 45, 80);
+                    ctx.fillRect(400, 330, 45, 80);
+                    ctx.fillRect(465, 330, 45, 80);
+                    
+                    // === POLTRONA ROXA/VIOLETA (lado esquerdo) ===
+                    ctx.fillStyle = '#8B008B';
+                    ctx.fillRect(100, 350, 100, 90);
+                    
+                    // Braços da poltrona
+                    ctx.fillRect(80, 350, 20, 90);
+                    ctx.fillRect(200, 350, 20, 90);
+                    
+                    // Encosto da poltrona
+                    ctx.fillRect(100, 330, 100, 20);
+                    
+                    // Almofada da poltrona
+                    ctx.fillStyle = '#9932CC';
+                    ctx.fillRect(110, 360, 80, 70);
+                    
+                    // === MESA DE CENTRO (em frente ao sofá) ===
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(320, 450, 160, 60);
+                    
+                    // Tampo da mesa
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(315, 445, 170, 10);
+                    
+                    // Pernas da mesa
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(325, 505, 8, 20);
+                    ctx.fillRect(457, 505, 8, 20);
+                    ctx.fillRect(325, 505, 8, 20);
+                    ctx.fillRect(457, 505, 8, 20);
+                    
+                    // === MÁQUINA DE CAFÉ (lado direito) ===
+                    ctx.fillStyle = '#2F4F4F';
+                    ctx.fillRect(650, 250, 80, 120);
+                    
+                    // Detalhes da máquina
+                    ctx.fillStyle = '#4682B4';
+                    ctx.fillRect(655, 260, 70, 30);
+                    ctx.fillRect(655, 300, 30, 60);
+                    
+                    // Xícaras em cima da máquina
+                    ctx.fillStyle = '#FFFACD';
+                    ctx.fillRect(690, 240, 15, 10);
+                    ctx.fillRect(710, 240, 15, 10);
+                    
+                    // === QUADROS NA PAREDE ===
+                    // Quadro principal (grande)
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(450, 120, 120, 80);
+                    ctx.fillStyle = '#87CEEB';
+                    ctx.fillRect(455, 125, 110, 70);
+                    
+                    // Quadro pequeno esquerdo
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(150, 140, 80, 60);
+                    ctx.fillStyle = '#98FB98';
+                    ctx.fillRect(155, 145, 70, 50);
+                    
+                    // Quadro pequeno direito
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(600, 130, 70, 70);
+                    ctx.fillStyle = '#FFB6C1';
+                    ctx.fillRect(605, 135, 60, 60);
+                    
+                    // === PLANTA (canto direito) ===
+                    // Vaso da planta
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(720, 380, 40, 50);
+                    
+                    // Planta/folhas
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(725, 360, 30, 20);
+                    ctx.fillRect(720, 340, 40, 20);
+                    ctx.fillRect(715, 320, 50, 20);
+                    
+                    // === BALCÃO/CONTADOR (fundo direito) ===
+                    ctx.fillStyle = '#A0522D';
+                    ctx.fillRect(580, 180, 150, 60);
+                    
+                    // Tampo do balcão
+                    ctx.fillStyle = '#D2691E';
+                    ctx.fillRect(575, 175, 160, 10);
+                    
+                    // === MENU NA PAREDE ===
+                    ctx.fillStyle = '#FFFACD';
+                    ctx.fillRect(600, 80, 80, 100);
+                    ctx.fillStyle = '#000000';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('MENU', 640, 100);
+                    ctx.font = '8px Arial';
+                    ctx.fillText('Coffee $2', 640, 120);
+                    ctx.fillText('Latte $3', 640, 135);
+                    ctx.fillText('Tea $2', 640, 150);
+                    ctx.fillText('Muffin $3', 640, 165);
+                    
+                    // === LUMINÁRIAS/LUZES ===
+                    // Luminária pendente central
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(395, 80, 10, 30);
+                    ctx.beginPath();
+                    ctx.arc(400, 120, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Luminária lateral
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(200, 90, 8, 25);
+                    ctx.beginPath();
+                    ctx.arc(204, 125, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // === DETALHES FINAIS ===
+                    // Revista na mesa
+                    ctx.fillStyle = '#FF69B4';
+                    ctx.fillRect(360, 460, 40, 30);
+                    
+                    // Xícaras na mesa
+                    ctx.fillStyle = '#FFFACD';
+                    ctx.fillRect(420, 465, 12, 8);
+                    ctx.fillRect(440, 465, 12, 8);
+                    
+                    break;
+                    
+                case 2: // Caminho para o Forte - Trilha na praia
+                    // === CÉU DEGRADÊ ===
+                    // Céu azul claro para azul escuro
+                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                    gradient.addColorStop(0, '#87CEEB');
+                    gradient.addColorStop(1, '#4682B4');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, canvas.width, 300);
+                    
+                    // === MAR ===
+                    ctx.fillStyle = '#006994';
+                    ctx.fillRect(0, 300, canvas.width, 150);
+                    
+                    // Ondas do mar (várias camadas)
+                    ctx.fillStyle = '#4682B4';
+                    for(let i = 0; i < 8; i++) {
+                        ctx.beginPath();
+                        ctx.arc(i*120 - 60, 320 + Math.sin(i) * 20, 40, 0, Math.PI);
+                        ctx.fill();
+                    }
+                    
+                    // Ondas menores
+                    ctx.fillStyle = '#5F9EA0';
+                    for(let i = 0; i < 12; i++) {
+                        ctx.beginPath();
+                        ctx.arc(i*80 - 40, 340 + Math.sin(i * 1.5) * 15, 25, 0, Math.PI);
+                        ctx.fill();
+                    }
+                    
+                    // === AREIA DA PRAIA ===
+                    ctx.fillStyle = '#F4A460';
+                    ctx.fillRect(0, 450, canvas.width, 150);
+                    
+                    // Textura da areia
+                    ctx.fillStyle = '#DEB887';
+                    for(let i = 0; i < 50; i++) {
+                        const x = Math.random() * canvas.width;
+                        const y = 450 + Math.random() * 150;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // === TRILHA DE PEDRAS ===
+                    ctx.fillStyle = '#696969';
+                    for(let i = 0; i < 18; i++) {
+                        const x = 50 + i*40 + Math.sin(i * 0.5) * 20;
+                        const y = 480 + Math.sin(i * 0.3) * 30;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 18 + Math.random() * 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Sombra das pedras
+                        ctx.fillStyle = '#2F2F2F';
+                        ctx.beginPath();
+                        ctx.arc(x + 3, y + 3, 15 + Math.random() * 8, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#696969';
+                    }
+                    
+                    // === VEGETAÇÃO COSTEIRA ===
+                    // Palmeiras
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(120, 380, 15, 80);
+                    ctx.fillRect(600, 370, 18, 90);
+                    
+                    // Folhas das palmeiras
+                    ctx.fillStyle = '#228B22';
+                    for(let i = 0; i < 8; i++) {
+                        const angle = (i * Math.PI * 2) / 8;
+                        const x1 = 127 + Math.cos(angle) * 40;
+                        const y1 = 380 + Math.sin(angle) * 25;
+                        ctx.fillRect(x1-3, y1-15, 6, 30);
+                        
+                        const x2 = 609 + Math.cos(angle) * 45;
+                        const y2 = 370 + Math.sin(angle) * 28;
+                        ctx.fillRect(x2-3, y2-18, 6, 36);
+                    }
+                    
+                    // Arbustos
+                    ctx.fillStyle = '#32CD32';
+                    ctx.beginPath();
+                    ctx.arc(200, 420, 30, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(350, 430, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(500, 425, 35, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // === GAIVOTAS NO CÉU ===
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = '16px Arial';
+                    ctx.fillText('⋀', 200, 100);
+                    ctx.fillText('⋀', 450, 120);
+                    ctx.fillText('⋀', 600, 90);
+                    ctx.fillText('⋀', 350, 110);
+                    
+                    // === SOL ===
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(650, 80, 35, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Raios do sol
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 3;
+                    for(let i = 0; i < 12; i++) {
+                        const angle = (i * Math.PI * 2) / 12;
+                        const x1 = 650 + Math.cos(angle) * 45;
+                        const y1 = 80 + Math.sin(angle) * 45;
+                        const x2 = 650 + Math.cos(angle) * 60;
+                        const y2 = 80 + Math.sin(angle) * 60;
+                        ctx.beginPath();
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
+                        ctx.stroke();
+                    }
+                    
+                    break;
+                    
+                case 3: // Forte Copacabana - Cenário épico e romântico
+                    // === CÉU DO PÔR DO SOL ===
+                    const sunsetGradient = ctx.createLinearGradient(0, 0, 0, 300);
+                    sunsetGradient.addColorStop(0, '#FF6B35');
+                    sunsetGradient.addColorStop(0.3, '#F7931E');
+                    sunsetGradient.addColorStop(0.6, '#FFD700');
+                    sunsetGradient.addColorStop(1, '#4169E1');
+                    ctx.fillStyle = sunsetGradient;
+                    ctx.fillRect(0, 0, canvas.width, 300);
+                    
+                    // === OCEANO DOURADO ===
+                    ctx.fillStyle = '#1e3a8a';
+                    ctx.fillRect(0, 300, canvas.width, 300);
+                    
+                    // Reflexo dourado do sol na água
+                    ctx.fillStyle = '#FFD700';
+                    for(let i = 0; i < 15; i++) {
+                        const x = 350 + Math.sin(i * 0.5) * 100;
+                        const y = 320 + i * 15;
+                        ctx.fillRect(x, y, 100 - i*4, 3);
+                    }
+                    
+                    // === ESTRUTURA PRINCIPAL DO FORTE ===
+                    // Muralha principal
+                    ctx.fillStyle = '#8B7355';
+                    ctx.fillRect(100, 150, 600, 250);
+                    
+                    // Textura da pedra
+                    ctx.fillStyle = '#A0522D';
+                    for(let i = 0; i < 20; i++) {
+                        for(let j = 0; j < 8; j++) {
+                            ctx.fillRect(110 + j*85, 160 + i*12, 80, 2);
+                        }
+                    }
+                    
+                    // === TORRES DO FORTE ===
+                    // Torre esquerda
+                    ctx.fillStyle = '#696969';
+                    ctx.fillRect(120, 80, 80, 320);
+                    
+                    // Torre direita
+                    ctx.fillRect(600, 80, 80, 320);
+                    
+                    // Torre central (mais alta)
+                    ctx.fillRect(350, 60, 100, 340);
+                    
+                    // === DETALHES DAS TORRES ===
+                    // Janelas da torre esquerda
+                    ctx.fillStyle = '#2F2F2F';
+                    ctx.fillRect(135, 120, 15, 25);
+                    ctx.fillRect(165, 120, 15, 25);
+                    ctx.fillRect(135, 180, 15, 25);
+                    ctx.fillRect(165, 180, 15, 25);
+                    
+                    // Janelas da torre direita
+                    ctx.fillRect(615, 120, 15, 25);
+                    ctx.fillRect(645, 120, 15, 25);
+                    ctx.fillRect(615, 180, 15, 25);
+                    ctx.fillRect(645, 180, 15, 25);
+                    
+                    // Janelas da torre central
+                    ctx.fillRect(370, 100, 20, 30);
+                    ctx.fillRect(410, 100, 20, 30);
+                    ctx.fillRect(370, 160, 20, 30);
+                    ctx.fillRect(410, 160, 20, 30);
+                    
+                    // === BANDEIRAS ===
+                    // Mastro esquerdo
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(158, 50, 4, 40);
+                    
+                    // Bandeira esquerda
+                    ctx.fillStyle = '#FF0000';
+                    ctx.fillRect(162, 55, 30, 20);
+                    
+                    // Mastro direito
+                    ctx.fillRect(638, 50, 4, 40);
+                    
+                    // Bandeira direita
+                    ctx.fillStyle = '#00FF00';
+                    ctx.fillRect(642, 55, 30, 20);
+                    
+                    // Mastro central
+                    ctx.fillRect(398, 30, 4, 40);
+                    
+                    // Bandeira central (do Brasil)
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.fillRect(402, 35, 35, 25);
+                    ctx.fillStyle = '#0000FF';
+                    ctx.beginPath();
+                    ctx.arc(419, 47, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // === PORTÃO PRINCIPAL ===
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(370, 320, 60, 80);
+                    
+                    // Detalhes do portão
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(375, 325, 50, 70);
+                    
+                    // Dobradiças
+                    ctx.fillStyle = '#2F2F2F';
+                    ctx.fillRect(372, 340, 6, 6);
+                    ctx.fillRect(372, 360, 6, 6);
+                    ctx.fillRect(372, 380, 6, 6);
+                    
+                    // === CANHÕES ===
+                    // Canhão esquerdo
+                    ctx.fillStyle = '#2F2F2F';
+                    ctx.fillRect(140, 250, 40, 12);
+                    ctx.fillRect(130, 255, 15, 8);
+                    
+                    // Canhão direito
+                    ctx.fillRect(620, 250, 40, 12);
+                    ctx.fillRect(655, 255, 15, 8);
+                    
+                    // === ESCADARIA ===
+                    ctx.fillStyle = '#A0522D';
+                    for(let i = 0; i < 5; i++) {
+                        ctx.fillRect(340 + i*5, 400 + i*8, 120 - i*10, 8);
+                    }
+                    
+                    // === VEGETAÇÃO TROPICAL ===
+                    // Palmeira esquerda
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(45, 250, 12, 150);
+                    
+                    ctx.fillStyle = '#228B22';
+                    for(let i = 0; i < 8; i++) {
+                        const angle = (i * Math.PI * 2) / 8;
+                        const x = 51 + Math.cos(angle) * 35;
+                        const y = 250 + Math.sin(angle) * 20;
+                        ctx.fillRect(x-2, y-12, 4, 24);
+                    }
+                    
+                    // Palmeira direita
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(743, 270, 12, 130);
+                    
+                    ctx.fillStyle = '#228B22';
+                    for(let i = 0; i < 8; i++) {
+                        const angle = (i * Math.PI * 2) / 8;
+                        const x = 749 + Math.cos(angle) * 30;
+                        const y = 270 + Math.sin(angle) * 18;
+                        ctx.fillRect(x-2, y-10, 4, 20);
+                    }
+                    
+                    // === SOL POENTE ===
+                    ctx.fillStyle = '#FF4500';
+                    ctx.beginPath();
+                    ctx.arc(150, 120, 45, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // === NUVENS ROMÂNTICAS ===
+                    ctx.fillStyle = '#FFB6C1';
+                    ctx.beginPath();
+                    ctx.arc(250, 80, 25, 0, Math.PI * 2);
+                    ctx.arc(280, 85, 20, 0, Math.PI * 2);
+                    ctx.arc(300, 80, 25, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(550, 90, 20, 0, Math.PI * 2);
+                    ctx.arc(570, 95, 25, 0, Math.PI * 2);
+                    ctx.arc(595, 90, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    break;
+            }
+        }
+        
+        function drawNPC() {
+            const level = levels[gameState.currentLevel];
+            const x = level.npcX;
+            const y = level.npcY;
+            
+            if (gameState.currentLevel < 3) {
+                // Interactive object (book, sofa, etc.)
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x-15, y-15, 30, 30);
+                ctx.fillStyle = '#000';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('?', x, y+5);
+            } else {
+                // Treasure chest with glow effect
+                if (gameState.treasureGlowing) {
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 30;
+                }
+                
+                ctx.fillStyle = '#DAA520';
+                ctx.fillRect(x-25, y-20, 50, 40);
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(x-22, y-17, 44, 34);
+                
+                // Heart on chest
+                ctx.fillStyle = '#FF1493';
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('💖', x, y+5);
+                
+                ctx.shadowBlur = 0; // reset shadow
+            }
+        }
+        
+        function updatePlayer() {
+            if (!gameState.canMove) return;
+            
+            let newX = gameState.playerX;
+            let newY = gameState.playerY;
+            let moving = false;
+            
+            if (keys['ArrowUp']) {
+                newY -= 3;
+                gameState.playerDirection = 'up';
+                moving = true;
+            }
+            if (keys['ArrowDown']) {
+                newY += 3;
+                gameState.playerDirection = 'down';
+                moving = true;
+            }
+            if (keys['ArrowLeft']) {
+                newX -= 3;
+                gameState.playerDirection = 'left';
+                moving = true;
+            }
+            if (keys['ArrowRight']) {
+                newX += 3;
+                gameState.playerDirection = 'right';
+                moving = true;
+            }
+            
+            // Boundary checking
+            if (newX >= 20 && newX <= canvas.width - 20) {
+                gameState.playerX = newX;
+            }
+            if (newY >= 20 && newY <= canvas.height - 20) {
+                gameState.playerY = newY;
+            }
+            
+            gameState.isMoving = moving;
+            
+            // Play move sound
+            if (moving && Math.random() < 0.1) { // Occasional move sound
+                playMoveSound();
+            }
+            
+            // Check interaction
+            if (keys['Space'] && !gameState.interactionActive) {
+                playInteractSound();
+                if (gameState.currentScreen === 'map') {
+                    checkMapInteraction();
+                } else {
+                    checkLevelInteraction();
+                }
+            }
+            
+            // Check if near interactive object
+            if (gameState.currentScreen === 'map') {
+                checkNearMapLocation();
+            } else {
+                checkNearInteractiveObject();
+            }
+        }
+        
+        function checkMapInteraction() {
+            mapLocations.forEach((location, index) => {
+                const distance = Math.sqrt(
+                    Math.pow(gameState.playerX - location.x, 2) + 
+                    Math.pow(gameState.playerY - location.y, 2)
+                );
+                
+                if (distance < 60 && location.unlocked) {
+                    enterLevel(index);
+                }
+            });
+        }
+        
+        function checkNearMapLocation() {
+            let nearLocation = false;
+            
+            mapLocations.forEach((location, index) => {
+                const distance = Math.sqrt(
+                    Math.pow(gameState.playerX - location.x, 2) + 
+                    Math.pow(gameState.playerY - location.y, 2)
+                );
+                
+                if (distance < 60 && location.unlocked) {
+                    nearLocation = true;
+                }
+            });
+            
+            const hintElement = document.getElementById('interactionHint');
+            if (nearLocation) {
+                hintElement.style.display = 'block';
+            } else {
+                hintElement.style.display = 'none';
+            }
+        }
+        
+        function enterLevel(levelIndex) {
+            gameState.currentScreen = 'level';
+            gameState.currentLevel = levelIndex;
+            gameState.playerX = 400;
+            gameState.playerY = 500;
+            updateLevelIndicator();
+            // Trocar música imediatamente ao entrar no nível
+            playBackgroundMusic(true);
+        }
+        
+        function exitLevel() {
+            gameState.currentScreen = 'map';
+            gameState.currentLevel = -1;
+            gameState.playerX = 400;
+            gameState.playerY = 300;
+            updateLevelIndicator();
+            // Trocar música imediatamente ao sair do nível
+            playBackgroundMusic(true);
+        }
+        
+        function checkLevelInteraction() {
+            // Check exit door
+            if (gameState.playerY > 560 && 
+                gameState.playerX > 370 && 
+                gameState.playerX < 430) {
+                exitLevel();
+                return;
+            }
+            
+            // Check NPC interaction
+            const level = levels[gameState.currentLevel];
+            const distance = Math.sqrt(
+                Math.pow(gameState.playerX - level.npcX, 2) + 
+                Math.pow(gameState.playerY - level.npcY, 2)
+            );
+            
+            if (distance < 50) {
+                if (gameState.currentLevel < 3) {
+                    // Regular question
+                    if (!gameState.questionsAnswered[gameState.currentLevel]) {
+                        showQuestion(gameState.currentLevel);
+                    }
+                } else {
+                    // Final question
+                    showFinalQuestion();
+                }
+            }
+        }
+        
+        function checkNearInteractiveObject() {
+            let nearObject = false;
+            
+            // Check exit door
+            if (gameState.playerY > 540 && 
+                gameState.playerX > 360 && 
+                gameState.playerX < 440) {
+                nearObject = true;
+            }
+            
+            // Check NPC
+            const level = levels[gameState.currentLevel];
+            const distance = Math.sqrt(
+                Math.pow(gameState.playerX - level.npcX, 2) + 
+                Math.pow(gameState.playerY - level.npcY, 2)
+            );
+            
+            if (distance < 60) {
+                nearObject = true;
+            }
+            
+            const hintElement = document.getElementById('interactionHint');
+            if (nearObject) {
+                hintElement.style.display = 'block';
+            } else {
+                hintElement.style.display = 'none';
+            }
+        }
+        
+        function showQuestion(questionIndex) {
+            const question = questions[questionIndex];
+            gameState.canMove = false;
+            gameState.interactionActive = true;
+            
+            document.getElementById('questionTitle').textContent = question.title;
+            document.getElementById('questionText').textContent = question.text;
+            
+            const optionsContainer = document.getElementById('questionOptions');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.onclick = () => answerQuestion(questionIndex, index);
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('questionResult').textContent = '';
+            document.getElementById('questionDialog').style.display = 'block';
+        }
+        
+        function answerQuestion(questionIndex, answerIndex) {
+            const question = questions[questionIndex];
+            const resultElement = document.getElementById('questionResult');
+            const buttons = document.querySelectorAll('.option-btn');
+            
+            if (answerIndex === question.correct) {
+                resultElement.textContent = 'Correto! ❤️';
+                resultElement.style.color = '#00ff00';
+                buttons[answerIndex].classList.add('correct');
+                playCorrectSound();
+                
+                gameState.questionsAnswered[questionIndex] = true;
+                
+                // Unlock next location
+                if (questionIndex < mapLocations.length - 1) {
+                    mapLocations[questionIndex + 1].unlocked = true;
+                }
+                
+                setTimeout(() => {
+                    hideQuestion();
+                    exitLevel();
+                }, 2000);
+            } else {
+                resultElement.textContent = 'Tenta de novo!';
+                resultElement.style.color = '#ff0000';
+                buttons[answerIndex].classList.add('wrong');
+                playWrongSound();
+                
+                setTimeout(() => {
+                    resultElement.textContent = '';
+                    buttons.forEach(btn => {
+                        btn.classList.remove('wrong');
+                    });
+                }, 1000);
+            }
+        }
+        
+        function showFinalQuestion() {
+            if (!canAccessFinalLevel()) {
+                return;
+            }
+            
+            gameState.canMove = false;
+            gameState.interactionActive = true;
+            
+            document.getElementById('questionTitle').textContent = '💍 O Grande Momento 💍';
+            document.getElementById('questionText').textContent = 'Quer casar comigo?';
+            
+            const optionsContainer = document.getElementById('questionOptions');
+            optionsContainer.innerHTML = '';
+            
+            const yesButton = document.createElement('button');
+            yesButton.className = 'option-btn';
+            yesButton.textContent = 'Sim ❤️';
+            yesButton.onclick = () => finalAnswer(true);
+            
+            const noButton = document.createElement('button');
+            noButton.className = 'option-btn';
+            noButton.textContent = 'Não';
+            noButton.onclick = () => finalAnswer(false);
+            
+            optionsContainer.appendChild(yesButton);
+            optionsContainer.appendChild(noButton);
+            
+            document.getElementById('questionResult').textContent = '';
+            document.getElementById('questionDialog').style.display = 'block';
+        }
+        
+        function finalAnswer(accepted) {
+            const resultElement = document.getElementById('questionResult');
+            
+            if (accepted) {
+                resultElement.textContent = 'SIM! ❤️❤️❤️';
+                resultElement.style.color = '#ff69b4';
+                
+                // Parar música de fundo para dar destaque aos fogos
+                stopBackgroundMusic();
+                
+                setTimeout(() => {
+                    hideQuestion();
+                    startFireworks();
+                    playFireworksSound();
+                    setTimeout(() => {
+                        showFinalMessage();
+                    }, 3000);
+                }, 2000);
+            } else {
+                resultElement.textContent = 'Nan nan ni na não! Tenta de novo!';
+                resultElement.style.color = '#ffa500';
+                
+                setTimeout(() => {
+                    resultElement.textContent = '';
+                }, 1500);
+            }
+        }
+        
+        function canAccessFinalLevel() {
+            return gameState.questionsAnswered[0] && 
+                   gameState.questionsAnswered[1] && 
+                   gameState.questionsAnswered[2];
+        }
+        
+        function updateLevelIndicator() {
+            const indicator = document.getElementById('levelIndicator');
+            if (gameState.currentScreen === 'start') {
+                indicator.textContent = '';
+            } else if (gameState.currentScreen === 'map') {
+                indicator.textContent = 'Vila Mágica do Amor ❤️';
+            } else {
+                indicator.textContent = levels[gameState.currentLevel].name;
+            }
+        }
+        
+        function hideQuestion() {
+            document.getElementById('questionDialog').style.display = 'none';
+            document.getElementById('interactionHint').style.display = 'none';
+            gameState.canMove = true;
+            gameState.interactionActive = false;
+        }
+        
+        function startFireworks() {
+            const fireworksContainer = document.getElementById('fireworks');
+            
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createFirework();
+                }, i * 200);
+            }
+        }
+        
+        function createFirework() {
+            const fireworksContainer = document.getElementById('fireworks');
+            const colors = ['#ff0080', '#00ff80', '#8000ff', '#ff8000', '#0080ff', '#ff0040'];
+            
+            for (let i = 0; i < 12; i++) {
+                const firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                firework.style.left = Math.random() * 100 + '%';
+                firework.style.top = Math.random() * 100 + '%';
+                
+                fireworksContainer.appendChild(firework);
+                
+                setTimeout(() => {
+                    firework.remove();
+                }, 2000);
+            }
+        }
+        
+        function showFinalMessage() {
+            document.getElementById('finalMessage').style.display = 'block';
+        }
+        
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (gameState.currentScreen === 'start') {
+                drawStartScreen();
+            } else {
+                updatePlayer();
+                
+                if (gameState.currentScreen === 'map') {
+                    drawMap();
+                } else {
+                    drawLevel();
+                }
+                
+                drawPlayer();
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize game
+        updateLevelIndicator();
+        initializeMobileControls();
+        gameLoop();
+    </script>
+    
+    <script src="audio.js"></script>
+
+</body>
+</html>

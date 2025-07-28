@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Jornada de Michelle - Mobile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 4px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: #000;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: auto;
+            max-width: 800px;
+            max-height: 600px;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
+        }
+        
+        .start-button {
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 100;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+
+        .start-button:active { 
+            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        .start-button.hidden {
+            display: none !important;
+            visibility: hidden !important;
+        }
+
+        .sound-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            z-index: 110;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-family: 'Pixelify Sans', cursive;
+            z-index: 110;
+        }
+
+        .level-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 18px;
+            z-index: 110;
+        }
+
+        .interaction-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 16px;
+            z-index: 110;
+        }
+
+        .dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid gold;
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+            z-index: 120;
+        }
+
+        .dialog h3 {
+            margin-bottom: 10px;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 20px;
+        }
+
+        .dialog p {
+            margin-bottom: 10px;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 16px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'Pixelify Sans', cursive;
+        }
+
+        .option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .final-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid gold;
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+            z-index: 120;
+        }
+
+        .final-message h2 {
+            margin-bottom: 10px;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 24px;
+        }
+
+        .final-message p {
+            margin-bottom: 10px;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 18px;
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 110;
+        }
+
+        .d-pad {
+            display: grid;
+            grid-template-rows: repeat(3, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .d-pad-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'Pixelify Sans', cursive;
+        }
+
+        .d-pad-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .interact-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            font-family: 'Pixelify Sans', cursive;
+        }
+
+        .interact-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Estilos adicionais conforme necessário */
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="ui">
+            <div class="sound-toggle" id="soundToggle">🔊 SOM</div>
+            <div class="controls" id="keyboardControls"><div>Use ↑↓←→ para mover</div><div>ESPAÇO para interagir</div></div>
+            <div class="level-indicator" id="levelIndicator">Vila Mágica do Amor ❤️</div>
+            <div class="interaction-hint" id="interactionHint">Pressione ESPAÇO para interagir</div>
+            <div class="dialog" id="questionDialog">
+                <h3 id="questionTitle">Pergunta</h3>
+                <p id="questionText"></p>
+                <div class="options" id="questionOptions"></div>
+                <p id="questionResult"></p>
+            </div>
+            <div class="final-message" id="finalMessage">
+                <h2>💖 Parabéns! 💖</h2>
+                <p>Não é fim de jogo...<br>é o começo de uma nova jornada ❤️</p>
+            </div>
+            <div class="mobile-controls" id="mobileControls">
+                <div class="d-pad">
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="up">↑</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="left">←</div>
+                    <div class="d-pad-btn"></div>
+                    <div class="d-pad-btn" data-direction="right">→</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="down">↓</div>
+                    <div></div>
+                </div>
+                <div class="interact-btn" id="interactBtn">ESPAÇO<br><small>Interagir</small></div>
+            </div>
+            <button class="start-button" id="startButton">Iniciar Jogo</button>
+        </div>
+        <div class="fireworks" id="fireworks"></div>
+    </div>
+    <script src="audio.js"></script>
+    <script src="loading.js"></script>
+    <script src="game.js"></script>
+    <script src="scenes.js"></script>
+    <script>
+        // Detecta se é mobile
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 900;
+        }
+        // Esconde controles de teclado e mostra controles mobile
+        function updateControlsVisibility() {
+            const keyboardControls = document.getElementById('keyboardControls');
+            const mobileControls = document.getElementById('mobileControls');
+            if (isMobile()) {
+                if (keyboardControls) keyboardControls.style.display = 'none';
+                if (mobileControls) mobileControls.style.display = 'flex';
+            } else {
+                if (keyboardControls) keyboardControls.style.display = '';
+                if (mobileControls) mobileControls.style.display = 'none';
+            }
+        }
+        window.addEventListener('resize', updateControlsVisibility);
+        window.addEventListener('DOMContentLoaded', updateControlsVisibility);
+
+        // Suporte a touch: tap para interagir, botões visuais para mover
+        function simulateKey(key) {
+            const keyCode = {
+                'up': 38, 'down': 40, 'left': 37, 'right': 39, 'space': 32
+            }[key];
+            if (!keyCode) return;
+            document.dispatchEvent(new KeyboardEvent('keydown', {key: key, keyCode, which: keyCode, bubbles: true}));
+            setTimeout(() => {
+                document.dispatchEvent(new KeyboardEvent('keyup', {key: key, keyCode, which: keyCode, bubbles: true}));
+            }, 100);
+        }
+        // Botões visuais
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isMobile()) {
+                document.querySelectorAll('.d-pad-btn[data-direction]').forEach(btn => {
+                    btn.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        simulateKey(btn.dataset.direction);
+                    });
+                });
+                const interactBtn = document.getElementById('interactBtn');
+                if (interactBtn) {
+                    interactBtn.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        simulateKey('space');
+                    });
+                }
+                // Tap no canvas para interagir
+                const gameCanvas = document.getElementById('gameCanvas');
+                if (gameCanvas) {
+                    gameCanvas.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        simulateKey('space');
+                    });
+                }
+            }
+        });
+        // Carregar imagens das casas do mapa
+        const mapHouseImages = {
+            hogwarts: new Image(),
+            centralperk: new Image(),
+            caminhoforte: new Image(),
+            fortecopacabana: new Image()
+        };
+        mapHouseImages.hogwarts.src = 'casa_hogwarts.png';
+        mapHouseImages.centralperk.src = 'centralperk.png';
+        mapHouseImages.caminhoforte.src = 'caminho_forte.png';
+        mapHouseImages.fortecopacabana.src = 'forte_copacabana.png';
+
+        // Inicialização igual ao game_atualizado.html
+        window.game = new GameManager();
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.game && window.game.mapLocations) {
+                window.game.mapLocations = [
+                    { name: "Quarto Hogwarts", x: 150, y: 200, unlocked: true, color: "#8B4513", houseColor: "#654321" },
+                    { name: "Central Perk", x: 650, y: 200, unlocked: false, color: "#FF8C00", houseColor: "#CD853F" },
+                    { name: "Caminho Forte", x: 400, y: 100, unlocked: false, color: "#4682B4", houseColor: "#5F9EA0" },
+                    { name: "Forte Copacabana", x: 400, y: 450, unlocked: false, color: "#DAA520", houseColor: "#B8860B", isFort: true }
+                ];
+            }
+            if (window.SceneRenderer && window.SceneRenderer.prototype) {
+                window.SceneRenderer.prototype.drawMap = function(playerX, playerY, mapLocations) {
+                    const ctx = this.ctx;
+                    const canvas = this.canvas;
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(0, 290, canvas.width, 20);
+                    ctx.fillRect(390, 0, 20, canvas.height);
+                    mapLocations.forEach((location, index) => {
+                        this.drawMapLocation(location, index);
+                    });
+                    if (this.updateTreasureGlow) this.updateTreasureGlow();
+                    this.drawPlayer(playerX, playerY);
+                };
+                window.SceneRenderer.prototype.drawMapLocation = function(location, index) {
+                    const ctx = this.ctx;
+                    const x = location.x;
+                    const y = location.y;
+                    let img = null;
+                    if (index === 0) img = mapHouseImages.hogwarts;
+                    if (index === 1) img = mapHouseImages.centralperk;
+                    if (index === 2) img = mapHouseImages.caminhoforte;
+                    if (index === 3) img = mapHouseImages.fortecopacabana;
+                    if (img && img.complete && img.naturalWidth) {
+                        let w = 70, h = 70;
+                        if (index === 3) { w = 90; h = 90; }
+                        ctx.save();
+                        ctx.globalAlpha = location.unlocked ? 1 : 0.5;
+                        ctx.drawImage(img, x - w/2, y - h/2, w, h);
+                        ctx.restore();
+                    } else {
+                        if (location.isFort) {
+                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                            ctx.fillRect(x-60, y-40, 120, 80);
+                            ctx.fillRect(x-50, y-30, 100, 60);
+                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                            ctx.fillRect(x-70, y-50, 20, 30);
+                            ctx.fillRect(x+50, y-50, 20, 30);
+                        } else {
+                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                            ctx.fillRect(x-30, y-20, 60, 40);
+                            ctx.fillStyle = location.unlocked ? '#8B0000' : '#2F2F2F';
+                            ctx.beginPath();
+                            ctx.moveTo(x-35, y-20);
+                            ctx.lineTo(x, y-50);
+                            ctx.lineTo(x+35, y-20);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.fillStyle = location.unlocked ? '#654321' : '#1F1F1F';
+                            ctx.fillRect(x-8, y-5, 16, 25);
+                            ctx.fillStyle = location.unlocked ? '#87CEEB' : '#2F2F2F';
+                            ctx.fillRect(x-20, y-15, 8, 8);
+                            ctx.fillRect(x+12, y-15, 8, 8);
+                        }
+                    }
+                    ctx.fillStyle = location.unlocked ? '#FFFFFF' : '#808080';
+                    ctx.font = '12px Pixelify Sans';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(location.name, x, y+40);
+                    if (!location.unlocked) {
+                        ctx.fillStyle = '#FF0000';
+                        ctx.font = '20px Arial';
+                        ctx.fillText('🔒', x, y-60);
+                    }
+                };
+            }
+        });
+        // --- MOBILE: Botão iniciar, fullscreen e orientação ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById("startButton");
+            if (startButton) {
+                startButton.addEventListener("click", async (e) => {
+                    e.preventDefault();
+                    console.log('🎮 Botão Iniciar Jogo clicado');
+                    
+                    // Esconde o botão imediatamente
+                    startButton.style.display = "none";
+                    startButton.style.visibility = "hidden";
+                    startButton.classList.add("hidden");
+                    
+                    // Habilita pointer-events no UI para interações do jogo
+                    const ui = document.getElementById('ui');
+                    if (ui) ui.style.pointerEvents = 'auto';
+                    
+                    // Inicia o jogo
+                    if (window.game && typeof window.game.start === 'function') {
+                        console.log('🎮 Iniciando jogo...');
+                        window.game.start();
+                    }
+                    
+                    // Entra em tela cheia
+                    try {
+                        const el = document.documentElement;
+                        if (el.requestFullscreen) {
+                            await el.requestFullscreen();
+                            console.log('📱 Fullscreen ativado');
+                        } else if (el.webkitRequestFullscreen) {
+                            await el.webkitRequestFullscreen();
+                            console.log('📱 Fullscreen ativado (webkit)');
+                        } else if (el.msRequestFullscreen) {
+                            await el.msRequestFullscreen();
+                            console.log('📱 Fullscreen ativado (ms)');
+                        }
+                    } catch (err) {
+                        console.warn('⚠️ Erro ao ativar fullscreen:', err);
+                    }
+                    
+                    // Tenta travar landscape
+                    if (screen.orientation && screen.orientation.lock) {
+                        try {
+                            await screen.orientation.lock("landscape");
+                            console.log('📱 Orientação landscape travada');
+                        } catch (err) {
+                            console.warn("⚠️ Não foi possível travar orientação:", err);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

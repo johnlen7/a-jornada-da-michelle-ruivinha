@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Teste - Movimento Mobile Otimizado</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 2px solid gold;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #222;
+        }
+        
+        .touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.2);
+            pointer-events: none;
+            z-index: 25;
+            display: none;
+            animation: touchPulse 0.5s ease-out;
+        }
+        
+        @keyframes touchPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 12px;
+            color: #ffd700;
+            max-width: 350px;
+            z-index: 100;
+            line-height: 1.4;
+        }
+        
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ff69b4;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            transition: all 0.1s ease;
+            z-index: 10;
+        }
+        
+        .debug-info {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            color: #ffd700;
+            z-index: 100;
+        }
+        
+        .center-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="info">
+            <h3>🎮 Teste de Movimento Mobile OTIMIZADO</h3>
+            <p><strong>📱 Toque simples:</strong> Move o personagem (3 passos automáticos)</p>
+            <p><strong>👆 Toque duplo:</strong> Ação de interação</p>
+            <p><strong>🎯 Centro (área morta):</strong> Gera interação automaticamente</p>
+            <p><strong>🚀 Agora o movimento é mais fluido!</strong></p>
+            <p id="lastAction">Última ação: Nenhuma</p>
+        </div>
+        
+        <div class="debug-info" id="debugInfo">
+            Touch: (0, 0)<br>
+            Direção: Nenhuma<br>
+            Distância: 0px
+        </div>
+        
+        <div class="touch-indicator" id="touchIndicator"></div>
+        <div class="center-guide"></div>
+        <div class="player" id="player"></div>
+    </div>
+
+    <script>
+        class OptimizedTouchController {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.touchIndicator = document.getElementById('touchIndicator');
+                this.debugInfo = document.getElementById('debugInfo');
+                this.lastAction = document.getElementById('lastAction');
+                this.player = document.getElementById('player');
+                
+                this.playerX = 400; // Centro
+                this.playerY = 300; // Centro
+                this.moveSpeed = 20;
+                this.moveDeadZone = 30;
+                
+                this.lastTapTime = 0;
+                this.doubleTapDelay = 300;
+                this.isProcessingTouch = false;
+                
+                this.init();
+                this.updatePlayerPosition();
+            }
+            
+            init() {
+                // Eventos touch
+                this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e), { passive: false });
+                
+                // Eventos de teclado simulados
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+                
+                // Desenhar grid no canvas
+                this.drawCanvas();
+            }
+            
+            drawCanvas() {
+                const ctx = this.canvas.getContext('2d');
+                const canvas = this.canvas;
+                
+                // Limpar
+                ctx.fillStyle = '#222';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Grid
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.1)';
+                ctx.lineWidth = 1;
+                
+                for(let x = 0; x <= canvas.width; x += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                for(let y = 0; y <= canvas.height; y += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // Centro
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(canvas.width/2, canvas.height/2, this.moveDeadZone, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Linhas centrais
+                ctx.beginPath();
+                ctx.moveTo(canvas.width/2, 0);
+                ctx.lineTo(canvas.width/2, canvas.height);
+                ctx.moveTo(0, canvas.height/2);
+                ctx.lineTo(canvas.width, canvas.height/2);
+                ctx.stroke();
+            }
+            
+            handleTouch(event) {
+                event.preventDefault();
+                
+                if (this.isProcessingTouch) return;
+                this.isProcessingTouch = true;
+                
+                const touch = event.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                
+                // Posição do toque
+                const canvasX = (touch.clientX - rect.left) * (this.canvas.width / rect.width);
+                const canvasY = (touch.clientY - rect.top) * (this.canvas.height / rect.height);
+                
+                // Centro da tela
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                // Calcular diferenças
+                const deltaX = canvasX - centerX;
+                const deltaY = canvasY - centerY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Atualizar debug
+                this.debugInfo.innerHTML = `
+                    Touch: (${Math.round(canvasX)}, ${Math.round(canvasY)})<br>
+                    Delta: (${Math.round(deltaX)}, ${Math.round(deltaY)})<br>
+                    Distância: ${Math.round(distance)}px
+                `;
+                
+                // Mostrar indicador
+                this.showTouchIndicator(touch.clientX - rect.left, touch.clientY - rect.top);
+                
+                // Verificar double tap
+                const currentTime = Date.now();
+                if (currentTime - this.lastTapTime < this.doubleTapDelay) {
+                    this.handleInteraction();
+                    this.lastTapTime = 0;
+                    setTimeout(() => { this.isProcessingTouch = false; }, 100);
+                    return;
+                }
+                this.lastTapTime = currentTime;
+                
+                // Área morta no centro
+                if (distance < this.moveDeadZone) {
+                    setTimeout(() => {
+                        if (Date.now() - this.lastTapTime >= this.doubleTapDelay) {
+                            this.handleInteraction();
+                        }
+                    }, this.doubleTapDelay);
+                    setTimeout(() => { this.isProcessingTouch = false; }, this.doubleTapDelay + 100);
+                    return;
+                }
+                
+                // Determinar direção
+                let direction;
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    direction = deltaX > 0 ? 'ArrowRight' : 'ArrowLeft';
+                } else {
+                    direction = deltaY > 0 ? 'ArrowDown' : 'ArrowUp';
+                }
+                
+                // Executar movimento otimizado
+                this.executeMobileMovement(direction);
+                
+                this.debugInfo.innerHTML += `<br>Direção: ${direction}<br>Movimento: 3 passos`;
+                
+                setTimeout(() => { this.isProcessingTouch = false; }, 250);
+            }
+            
+            // Nova função para executar movimento mais fluido no mobile
+            executeMobileMovement(direction) {
+                const steps = 3; // Número de passos de movimento
+                const stepDelay = 60; // Delay entre cada passo (ms)
+                
+                for (let i = 0; i < steps; i++) {
+                    setTimeout(() => {
+                        this.simulateKeyPress(direction, stepDelay * 0.8); // Duração do keydown
+                    }, i * stepDelay);
+                }
+                
+                console.log(`🎮 Movimento executado: ${direction} (${steps} passos)`);
+            }
+            
+            simulateKeyPress(keyCode, duration = 100) {
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: keyCode,
+                    code: keyCode,
+                    keyCode: this.getKeyCodeNumber(keyCode),
+                    bubbles: true
+                });
+                
+                document.dispatchEvent(keyEvent);
+                
+                setTimeout(() => {
+                    const keyUpEvent = new KeyboardEvent('keyup', {
+                        key: keyCode,
+                        code: keyCode,
+                        keyCode: this.getKeyCodeNumber(keyCode),
+                        bubbles: true
+                    });
+                    document.dispatchEvent(keyUpEvent);
+                }, duration);
+            }
+            
+            getKeyCodeNumber(keyString) {
+                const codes = {
+                    'ArrowUp': 38,
+                    'ArrowDown': 40,
+                    'ArrowLeft': 37,
+                    'ArrowRight': 39,
+                    ' ': 32
+                };
+                return codes[keyString] || 0;
+            }
+            
+            handleKeydown(event) {
+                const { key } = event;
+                
+                switch(key) {
+                    case 'ArrowUp':
+                        this.playerY = Math.max(20, this.playerY - this.moveSpeed);
+                        this.lastAction.textContent = 'Última ação: Movimento para CIMA';
+                        break;
+                    case 'ArrowDown':
+                        this.playerY = Math.min(580, this.playerY + this.moveSpeed);
+                        this.lastAction.textContent = 'Última ação: Movimento para BAIXO';
+                        break;
+                    case 'ArrowLeft':
+                        this.playerX = Math.max(20, this.playerX - this.moveSpeed);
+                        this.lastAction.textContent = 'Última ação: Movimento para ESQUERDA';
+                        break;
+                    case 'ArrowRight':
+                        this.playerX = Math.min(780, this.playerX + this.moveSpeed);
+                        this.lastAction.textContent = 'Última ação: Movimento para DIREITA';
+                        break;
+                    case ' ':
+                        this.lastAction.textContent = 'Última ação: INTERAÇÃO (Espaço)';
+                        this.player.style.background = '#00ff00';
+                        setTimeout(() => {
+                            this.player.style.background = '#ff69b4';
+                        }, 200);
+                        break;
+                }
+                
+                this.updatePlayerPosition();
+            }
+            
+            handleInteraction() {
+                this.simulateKeyPress(' ', 150);
+                
+                // Feedback visual no indicador
+                if (this.touchIndicator) {
+                    this.touchIndicator.style.background = 'rgba(255, 105, 180, 0.3)';
+                    this.touchIndicator.style.borderColor = '#ff69b4';
+                    setTimeout(() => {
+                        this.touchIndicator.style.background = 'rgba(255, 215, 0, 0.2)';
+                        this.touchIndicator.style.borderColor = '#ffd700';
+                    }, 200);
+                }
+            }
+            
+            showTouchIndicator(x, y) {
+                this.touchIndicator.style.display = 'block';
+                this.touchIndicator.style.left = (x - 30) + 'px';
+                this.touchIndicator.style.top = (y - 30) + 'px';
+                
+                setTimeout(() => {
+                    this.touchIndicator.style.display = 'none';
+                }, 500);
+            }
+            
+            updatePlayerPosition() {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = rect.width / this.canvas.width;
+                const scaleY = rect.height / this.canvas.height;
+                
+                this.player.style.left = (rect.left + this.playerX * scaleX - 20) + 'px';
+                this.player.style.top = (rect.top + this.playerY * scaleY - 20) + 'px';
+            }
+        }
+        
+        // Forçar orientação landscape
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+        
+        // Prevenir zoom
+        document.addEventListener('touchmove', function (event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Inicializar quando pronto
+        window.addEventListener('load', () => {
+            const touchTest = new OptimizedTouchController();
+            
+            // Ajustar quando orientação mudar
+            window.addEventListener('resize', () => {
+                setTimeout(() => {
+                    touchTest.updatePlayerPosition();
+                }, 100);
+            });
+            
+            console.log('🎮 Teste de Touch Controller OTIMIZADO carregado!');
+            console.log('📱 Agora um toque = 3 passos de movimento automático!');
+        });
+    </script>
+</body>
+</html>

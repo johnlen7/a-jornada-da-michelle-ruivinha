@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Jornada de Michelle - Mobile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 4px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: #000;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: auto;
+            max-width: 800px;
+            max-height: 600px;
+        }        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .dialog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 20px;
+            max-width: 500px;
+            text-align: center;
+            pointer-events: auto;
+            display: none;
+        }
+        
+        .dialog h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        .dialog p {
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .sound-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: 'Pixelify Sans', cursive;
+            pointer-events: auto;
+            font-weight: bold;
+        }
+        
+        .sound-toggle:hover {
+            background: rgba(255, 215, 0, 0.2);
+        }
+        
+        .level-indicator {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #ffd700;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            border: 2px solid #666;
+            line-height: 1.4;
+        }
+        
+        .options {
+            display: grid;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .option-btn {
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            color: white;
+            border: 2px solid #666;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .option-btn:hover {
+            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+            border-color: #ffd700;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .option-btn.correct {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            border-color: #4CAF50;
+        }
+        
+        .option-btn.incorrect {
+            background: linear-gradient(145deg, #f44336, #d32f2f);
+            border-color: #f44336;
+        }
+        
+        #questionResult {
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        
+        #interactionHint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            display: none;
+            border: 2px solid #ffd700;
+            font-weight: bold;
+        }
+        
+        #finalMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #4a0e4e, #2a0845);
+            border: 4px solid #ffd700;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            display: none;
+            z-index: 400;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        #finalMessage h2 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 32px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+        
+        #finalMessage p {
+            font-size: 18px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        #fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 350;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: firework 2s ease-out forwards;
+        }
+        
+        @keyframes firework {
+            0% {
+                opacity: 1;
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) rotate(360deg);
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            #gameContainer {
+                border-width: 2px;
+                margin: 5px;
+            }
+            
+            .dialog {
+                padding: 15px;
+                max-width: 95%;
+            }
+            
+            .dialog h3 {
+                font-size: 16px;
+            }
+            
+            .dialog p {
+                font-size: 14px;
+            }
+            
+            .option-btn {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+            
+            #finalMessage {
+                padding: 25px;
+                max-width: 95%;
+            }
+            
+            #finalMessage h2 {
+                font-size: 24px;
+            }
+              #finalMessage p {
+                font-size: 16px;
+            }        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+          <!-- UI Elements -->
+        <div id="ui" style="display: none;">
+            <!-- Level Indicator -->
+            <div id="levelIndicator" class="level-indicator"></div>
+              <!-- Sound Toggle -->
+            <button id="soundToggle" class="sound-toggle">🔊 SOM</button>
+            
+            <!-- Test Music Buttons -->
+            <div style="position: absolute; top: 80px; right: 15px; display: flex; flex-direction: column; gap: 5px;">
+                <button onclick="testHogwartsMusic()" style="background: #8B4513; color: white; border: none; padding: 5px; font-size: 12px; border-radius: 5px;">🏰 Test Hogwarts</button>
+                <button onclick="testCentralPerkMusic()" style="background: #654321; color: white; border: none; padding: 5px; font-size: 12px; border-radius: 5px;">☕ Test C.Perk</button>
+                <button onclick="stopTestMusic()" style="background: #8B0000; color: white; border: none; padding: 5px; font-size: 12px; border-radius: 5px;">⏹️ Stop</button>
+            </div>
+            
+            <!-- Desktop Controls Info -->
+            <div class="controls">
+                <strong>Controles:</strong><br>
+                🎮 Setas/WASD - Mover<br>
+                ⭐ Espaço/Enter - Interagir
+            </div>
+            
+            <!-- Interaction Hint -->
+            <div id="interactionHint">Pressione ESPAÇO para interagir</div>
+            
+            <!-- Question Dialog -->
+            <div id="questionDialog" class="dialog">
+                <h3 id="questionTitle"></h3>
+                <p id="questionText"></p>
+                <div id="questionOptions" class="options"></div>
+                <p id="questionResult"></p>
+            </div>
+        </div>
+        
+        <!-- Fireworks Container -->
+        <div id="fireworks"></div>
+        
+        <!-- Final Message -->
+        <div id="finalMessage">
+            <h2>💖 Parabéns! 💖</h2>
+            <p>Vocês completaram a jornada do amor!</p>
+            <p>Que essa seja apenas o começo de uma nova aventura juntos! ❤️</p>
+        </div>
+    </div>    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="loading.js"></script>
+    <script src="game.js"></script>
+    <script src="scenes.js"></script>
+    <script>
+        window.game = new GameManager();
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.game && window.game.mapLocations) {
+                window.game.mapLocations = [
+                    { name: "Quarto Hogwarts", x: 150, y: 200, unlocked: true, color: "#8B4513", houseColor: "#654321" },
+                    { name: "Central Perk", x: 650, y: 200, unlocked: false, color: "#FF8C00", houseColor: "#CD853F" },
+                    { name: "Caminho Forte", x: 400, y: 100, unlocked: false, color: "#4682B4", houseColor: "#5F9EA0" },
+                    { name: "Forte Copacabana", x: 400, y: 450, unlocked: false, color: "#DAA520", houseColor: "#B8860B", isFort: true }
+                ];
+            }
+
+            // Sobrescrever o SceneRenderer.drawMap e SceneRenderer.drawThemedHouse para ficar igual ao jogo_desktop.html
+            if (window.SceneRenderer && window.SceneRenderer.prototype) {
+                window.SceneRenderer.prototype.drawMap = function(playerX, playerY, mapLocations) {
+                    const ctx = this.ctx;
+                    const canvas = this.canvas;
+                    
+                    // === CÉUS E NUVENS ===
+                    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+                    skyGradient.addColorStop(0, '#87CEEB');
+                    skyGradient.addColorStop(1, '#B0E0E6');
+                    ctx.fillStyle = skyGradient;
+                    ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
+                    
+                    // Nuvens brancas grandes
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    this.drawCloud(120, 80);
+                    this.drawCloud(350, 60);
+                    this.drawCloud(580, 90);
+                    this.drawCloud(650, 45);
+                    
+                    // === MONTANHAS AO FUNDO ===
+                    ctx.fillStyle = '#8B7D6B';
+                    ctx.beginPath();
+                    ctx.moveTo(0, canvas.height * 0.4);
+                    ctx.lineTo(200, canvas.height * 0.2);
+                    ctx.lineTo(400, canvas.height * 0.3);
+                    ctx.lineTo(600, canvas.height * 0.15);
+                    ctx.lineTo(canvas.width, canvas.height * 0.25);
+                    ctx.lineTo(canvas.width, canvas.height * 0.6);
+                    ctx.lineTo(0, canvas.height * 0.6);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // === GRAMA E TERRENO ===
+                    ctx.fillStyle = '#32CD32';
+                    ctx.fillRect(0, canvas.height * 0.6, canvas.width, canvas.height * 0.4);
+                    
+                    ctx.fillStyle = '#228B22';
+                    for(let i = 0; i < canvas.width; i += 40) {
+                        ctx.fillRect(i, canvas.height * 0.65, 20, canvas.height * 0.35);
+                    }
+                    
+                    // === ILHA CENTRAL ===
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height * 0.75;
+                    
+                    ctx.fillStyle = '#8FBC8F';
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, 120, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#556B2F';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // === RIOS/CAMINHOS CONECTANDO AS CASAS ===
+                    ctx.fillStyle = '#4169E1';
+                    ctx.strokeStyle = '#191970';
+                    ctx.lineWidth = 2;
+                    
+                    const riverY = canvas.height * 0.75;
+                    ctx.fillRect(100, riverY - 10, canvas.width - 200, 20);
+                    ctx.strokeRect(100, riverY - 10, canvas.width - 200, 20);
+                    
+                    ctx.fillRect(centerX - 10, canvas.height * 0.3, 20, canvas.height * 0.45);
+                    ctx.strokeRect(centerX - 10, canvas.height * 0.3, 20, canvas.height * 0.45);
+                    
+                    ctx.save();
+                    ctx.translate(centerX + 80, riverY);
+                    ctx.rotate(Math.PI / 4);
+                    ctx.fillRect(-10, 0, 20, 100);
+                    ctx.strokeRect(-10, 0, 20, 100);
+                    ctx.restore();
+                    
+                    // === PONTE NA ILHA CENTRAL ===
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(centerX - 30, riverY - 5, 60, 10);
+                    ctx.strokeStyle = '#654321';
+                    ctx.strokeRect(centerX - 30, riverY - 5, 60, 10);
+                    
+                    // === PRAIA (canto inferior direito) ===
+                    ctx.fillStyle = '#F4A460';
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width * 0.75, canvas.height);
+                    ctx.lineTo(canvas.width, canvas.height * 0.85);
+                    ctx.lineTo(canvas.width, canvas.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#4682B4';
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width * 0.8, canvas.height);
+                    ctx.lineTo(canvas.width, canvas.height * 0.9);
+                    ctx.lineTo(canvas.width, canvas.height);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    ctx.strokeStyle = '#87CEEB';
+                    ctx.lineWidth = 2;
+                    for(let i = 0; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.arc(canvas.width * 0.9 + i * 15, canvas.height * 0.95 - i * 5, 8, Math.PI, 2 * Math.PI);
+                        ctx.stroke();
+                    }
+                    
+                    // === ÁRVORES DECORATIVAS ===
+                    this.drawMagicalTree(150, canvas.height * 0.8);
+                    this.drawMagicalTree(650, canvas.height * 0.8);
+                    this.drawMagicalTree(centerX - 80, canvas.height * 0.65);
+                    this.drawMagicalTree(centerX + 80, canvas.height * 0.65);
+                    
+                    // === FLORES E DETALHES ===
+                    ctx.fillStyle = '#FF69B4';
+                    for(let i = 0; i < 10; i++) {
+                        const flowerX = 50 + i * 70;
+                        const flowerY = canvas.height * 0.85 + Math.sin(i) * 20;
+                        ctx.beginPath();
+                        ctx.arc(flowerX, flowerY, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // === ESTRELAS MÁGICAS ===
+                    for(let i = 0; i < 15; i++) {
+                        const x = (i * 127) % canvas.width;
+                        const y = (i * 97) % (canvas.height * 0.5);
+                        const twinkle = Math.sin(Date.now() * 0.005 + i) * 0.3 + 0.5;
+                        ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
+                        ctx.beginPath();
+                        ctx.arc(x, y, 1, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    
+                    // === TRILHAS MÁGICAS CONECTANDO AS CASAS ===
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([10, 5]);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(mapLocations[0].x + 50, mapLocations[0].y);
+                    ctx.lineTo(mapLocations[1].x - 50, mapLocations[1].y);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(mapLocations[1].x, mapLocations[1].y - 50);
+                    ctx.lineTo(mapLocations[2].x, mapLocations[2].y + 50);
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(mapLocations[2].x, mapLocations[2].y + 50);
+                    ctx.lineTo(mapLocations[3].x, mapLocations[3].y - 50);
+                    ctx.stroke();
+                    
+                    ctx.setLineDash([]);
+                    
+                    // === DESENHAR CASAS TEMÁTICAS ===
+                    mapLocations.forEach((location, index) => {
+                        this.drawThemedHouse(location, index);
+                    });
+                    
+                    // === DESENHAR JOGADOR ===
+                    this.drawPlayer(playerX, playerY);
+                };
+
+                window.SceneRenderer.prototype.drawThemedHouse = function(location, index) {
+                    const ctx = this.ctx;
+                    const x = location.x;
+                    const y = location.y;
+                    const unlocked = location.unlocked;
+                    
+                    switch(index) {
+                        case 0: // Casa de Hogwarts - Estilo castelo mágico
+                            ctx.fillStyle = unlocked ? '#4B0082' : '#2F2F2F';
+                            ctx.fillRect(x-40, y-30, 80, 60);
+                            
+                            ctx.fillRect(x-50, y-50, 20, 80);
+                            ctx.fillRect(x+30, y-50, 20, 80);
+                            
+                            ctx.fillRect(x-15, y-60, 30, 90);
+                            
+                            ctx.fillStyle = unlocked ? '#8B0000' : '#1F1F1F';
+                            ctx.beginPath();
+                            ctx.moveTo(x-50, y-50);
+                            ctx.lineTo(x-40, y-70);
+                            ctx.lineTo(x-30, y-50);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(x+30, y-50);
+                            ctx.lineTo(x+40, y-70);
+                            ctx.lineTo(x+50, y-50);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(x-15, y-60);
+                            ctx.lineTo(x, y-80);
+                            ctx.lineTo(x+15, y-60);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
+                            ctx.fillRect(x-35, y-30, 8, 12);
+                            ctx.fillRect(x+27, y-30, 8, 12);
+                            ctx.fillRect(x-6, y-45, 12, 15);
+                            
+                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
+                            ctx.fillRect(x-8, y, 16, 30);
+                            break;
+                            
+                        case 1: // Central Perk - Estilo café aconchegante
+                            ctx.fillStyle = unlocked ? '#CD853F' : '#2F2F2F';
+                            ctx.fillRect(x-40, y-30, 80, 60);
+                            
+                            ctx.fillStyle = unlocked ? '#8B4513' : '#1F1F1F';
+                            ctx.beginPath();
+                            ctx.moveTo(x-45, y-30);
+                            ctx.lineTo(x, y-50);
+                            ctx.lineTo(x+45, y-30);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
+                            ctx.fillRect(x-30, y-20, 15, 20);
+                            ctx.fillRect(x+15, y-20, 15, 20);
+                            
+                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
+                            ctx.fillRect(x-10, y, 20, 30);
+                            break;
+                            
+                        case 2: // Caminho para o Forte - Cabana de aventureiro
+                            ctx.fillStyle = unlocked ? '#8B4513' : '#2F2F2F';
+                            ctx.fillRect(x-30, y-20, 60, 40);
+                            
+                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
+                            ctx.beginPath();
+                            ctx.moveTo(x-35, y-20);
+                            ctx.lineTo(x, y-45);
+                            ctx.lineTo(x+35, y-20);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.fillStyle = unlocked ? '#696969' : '#2F2F2F';
+                            ctx.fillRect(x+15, y-40, 8, 25);
+                            
+                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
+                            ctx.beginPath();
+                            ctx.arc(x-15, y-10, 8, 0, Math.PI * 2);
+                            ctx.fill();
+                            
+                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
+                            ctx.beginPath();
+                            ctx.arc(x+10, y+10, 12, 0, Math.PI);
+                            ctx.fill();
+                            break;
+                            
+                        case 3: // Forte Copacabana - Torre majestosa
+                            ctx.fillStyle = unlocked ? '#696969' : '#2F2F2F';
+                            ctx.fillRect(x-25, y-40, 50, 70);
+                            
+                            ctx.fillRect(x-20, y-60, 40, 20);
+                            
+                            ctx.fillStyle = unlocked ? '#B8860B' : '#1F1F1F';
+                            ctx.beginPath();
+                            ctx.moveTo(x-25, y-60);
+                            ctx.lineTo(x, y-80);
+                            ctx.lineTo(x+25, y-60);
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
+                            ctx.fillRect(x-15, y-35, 8, 12);
+                            ctx.fillRect(x+7, y-35, 8, 12);
+                            ctx.fillRect(x-15, y-15, 8, 12);
+                            ctx.fillRect(x+7, y-15, 8, 12);
+                            
+                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
+                            ctx.fillRect(x-10, y+15, 20, 15);
+                            break;
+                    }
+                };
+            }
+        });
+    </script>
+</body>
+</html>

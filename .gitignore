@@ -1,0 +1,16 @@
+# Executáveis
+*.exe
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Logs
+*.log
+
+# Node modules (caso existam)
+node_modules/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db

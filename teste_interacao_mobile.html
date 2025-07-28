@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Teste - Interação Mobile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 2px solid gold;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #222;
+        }
+        
+        .touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.2);
+            pointer-events: none;
+            z-index: 25;
+            display: none;
+            animation: touchPulse 0.5s ease-out;
+        }
+        
+        @keyframes touchPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 12px;
+            color: #ffd700;
+            max-width: 350px;
+            z-index: 100;
+            line-height: 1.4;
+        }
+        
+        .player {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ff69b4;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            transition: all 0.1s ease;
+            z-index: 10;
+        }
+        
+        .npc {
+            position: absolute;
+            width: 35px;
+            height: 35px;
+            background: #ffd700;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            z-index: 10;
+        }
+        
+        .interaction-hint {
+            position: absolute;
+            background: rgba(255, 215, 0, 0.9);
+            color: #000;
+            padding: 5px 8px;
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: bold;
+            display: none;
+            z-index: 15;
+            animation: bounce 1s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .dialog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+            display: none;
+            z-index: 50;
+        }
+        
+        .dialog h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .dialog p {
+            margin-bottom: 10px;
+            line-height: 1.3;
+            font-size: 14px;
+        }
+        
+        .close-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="info">
+            <h3>🎮 Teste de Interação Mobile - CORRIGIDO</h3>
+            <p><strong>🚶‍♀️ Mova-se:</strong> Toque simples na tela</p>
+            <p><strong>💬 Interagir:</strong> Toque duplo RÁPIDO (< 250ms)</p>
+            <p><strong>🎯 Área central:</strong> Toque simples no centro = interação</p>
+            <p><strong>✅ Status:</strong> <span id="interactionStatus">Longe do NPC</span></p>
+            <p id="lastAction">Última ação: Nenhuma</p>
+            <p style="font-size: 10px; color: #888; margin-top: 5px;">💡 Dica: Para double tap, toque duas vezes rapidamente no mesmo local</p>
+        </div>
+        
+        <div class="touch-indicator" id="touchIndicator"></div>
+        <div class="player" id="player"></div>
+        <div class="npc" id="npc"></div>
+        <div class="interaction-hint" id="hint">💬 Toque duplo!</div>
+        
+        <div class="dialog" id="dialog">
+            <h3>🤖 NPC Teste</h3>
+            <p>Olá! Você conseguiu interagir comigo através do sistema de touch mobile! 🎉</p>
+            <p>A interação está funcionando perfeitamente!</p>
+            <button class="close-btn" onclick="closeDialog()">Fechar</button>
+        </div>
+    </div>
+
+    <script>
+        class InteractionTestController {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.touchIndicator = document.getElementById('touchIndicator');
+                this.lastAction = document.getElementById('lastAction');
+                this.player = document.getElementById('player');
+                this.npc = document.getElementById('npc');
+                this.hint = document.getElementById('hint');
+                this.dialog = document.getElementById('dialog');
+                this.interactionStatus = document.getElementById('interactionStatus');
+                
+                this.playerX = 100;
+                this.playerY = 300;
+                this.npcX = 600;
+                this.npcY = 300;
+                this.moveSpeed = 20;
+                this.moveDeadZone = 30;
+                
+                this.lastTapTime = 0;
+                this.doubleTapDelay = 250; // Reduzido de 300 para 250ms
+                this.isProcessingTouch = false;
+                
+                // Simular sistema de teclas do jogo original
+                this.keys = {};
+                this.gameState = {
+                    interactionActive: false,
+                    canMove: true
+                };
+                
+                this.init();
+                this.updatePositions();
+                this.checkNearNPC();
+                this.drawCanvas();
+            }
+            
+            init() {
+                this.canvas.addEventListener('touchstart', (e) => this.handleTouch(e), { passive: false });
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+                document.addEventListener('keyup', (e) => this.handleKeyup(e));
+                
+                // Game loop
+                setInterval(() => {
+                    this.updatePlayer();
+                    this.checkNearNPC();
+                }, 16);
+            }
+            
+            drawCanvas() {
+                const ctx = this.canvas.getContext('2d');
+                
+                // Fundo
+                ctx.fillStyle = '#2d4a22';
+                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Grid leve
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                for(let x = 0; x <= this.canvas.width; x += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, this.canvas.height);
+                    ctx.stroke();
+                }
+                for(let y = 0; y <= this.canvas.height; y += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(this.canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // Indicar zona de interação
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(this.npcX, this.npcY, 60, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            handleTouch(event) {
+                event.preventDefault();
+                
+                if (this.isProcessingTouch) return;
+                this.isProcessingTouch = true;
+                
+                const touch = event.touches[0];
+                const rect = this.canvas.getBoundingClientRect();
+                
+                const canvasX = (touch.clientX - rect.left) * (this.canvas.width / rect.width);
+                const canvasY = (touch.clientY - rect.top) * (this.canvas.height / rect.height);
+                
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                
+                const deltaX = canvasX - centerX;
+                const deltaY = canvasY - centerY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                this.showTouchIndicator(touch.clientX - rect.left, touch.clientY - rect.top);
+                
+                // Verificar double tap MELHORADO
+                const currentTime = Date.now();
+                const timeSinceLastTap = currentTime - this.lastTapTime;
+                
+                if (timeSinceLastTap < this.doubleTapDelay && timeSinceLastTap > 50) {
+                    // Double tap detectado!
+                    console.log('🎯 Double tap detectado!');
+                    this.showTouchIndicator(touch.clientX - rect.left, touch.clientY - rect.top, true); // Mostrar como interação
+                    this.handleInteraction();
+                    this.lastTapTime = 0; // Reset para evitar triple tap
+                    setTimeout(() => { this.isProcessingTouch = false; }, 150);
+                    return;
+                }
+                
+                // Atualizar tempo do último toque
+                this.lastTapTime = currentTime;
+                
+                // Área morta no centro - só executa se não for movimento
+                if (distance < this.moveDeadZone) {
+                    console.log('🎯 Toque no centro - aguardando possível double tap...');
+                    setTimeout(() => {
+                        const finalTimeSinceLastTap = Date.now() - this.lastTapTime;
+                        if (finalTimeSinceLastTap >= this.doubleTapDelay) {
+                            console.log('💫 Timeout - executando interação do centro');
+                            this.handleInteraction();
+                        }
+                    }, this.doubleTapDelay + 50);
+                    setTimeout(() => { this.isProcessingTouch = false; }, this.doubleTapDelay + 100);
+                    return;
+                }
+                
+                // Determinar direção para movimento
+                let direction;
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    direction = deltaX > 0 ? 'ArrowRight' : 'ArrowLeft';
+                } else {
+                    direction = deltaY > 0 ? 'ArrowDown' : 'ArrowUp';
+                }
+                
+                console.log(`🚶‍♀️ Movimento: ${direction}`);
+                
+                // Executar movimento otimizado
+                this.executeMobileMovement(direction);
+                
+                setTimeout(() => { this.isProcessingTouch = false; }, 200);
+            }
+            
+            executeMobileMovement(direction) {
+                const steps = 3;
+                const stepDelay = 60;
+                
+                for (let i = 0; i < steps; i++) {
+                    setTimeout(() => {
+                        this.simulateKeyPress(direction, stepDelay * 0.8);
+                    }, i * stepDelay);
+                }
+            }
+            
+            simulateKeyPress(keyCode, duration = 100) {
+                // Simular o sistema de keys do jogo original
+                const code = keyCode === 'Space' ? 'Space' : keyCode;
+                this.keys[code] = true;
+                
+                // Eventos de teclado
+                const keyEvent = new KeyboardEvent('keydown', {
+                    key: keyCode,
+                    code: keyCode,
+                    keyCode: this.getKeyCodeNumber(keyCode),
+                    bubbles: true
+                });
+                document.dispatchEvent(keyEvent);
+                
+                setTimeout(() => {
+                    this.keys[code] = false;
+                    const keyUpEvent = new KeyboardEvent('keyup', {
+                        key: keyCode,
+                        code: keyCode,
+                        keyCode: this.getKeyCodeNumber(keyCode),
+                        bubbles: true
+                    });
+                    document.dispatchEvent(keyUpEvent);
+                }, duration);
+            }
+            
+            getKeyCodeNumber(keyString) {
+                const codes = {
+                    'ArrowUp': 38,
+                    'ArrowDown': 40,
+                    'ArrowLeft': 37,
+                    'ArrowRight': 39,
+                    'Space': 32
+                };
+                return codes[keyString] || 0;
+            }
+            
+            handleKeydown(event) {
+                const { code } = event;
+                this.keys[code] = true;
+            }
+            
+            handleKeyup(event) {
+                const { code } = event;
+                this.keys[code] = false;
+            }
+            
+            // Simular sistema de movimento do jogo original
+            updatePlayer() {
+                if (!this.gameState.canMove || this.gameState.interactionActive) return;
+                
+                let newX = this.playerX;
+                let newY = this.playerY;
+                let moved = false;
+                
+                if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
+                    newX -= 3;
+                    moved = true;
+                }
+                if (this.keys['ArrowRight'] || this.keys['KeyD']) {
+                    newX += 3;
+                    moved = true;
+                }
+                if (this.keys['ArrowUp'] || this.keys['KeyW']) {
+                    newY -= 3;
+                    moved = true;
+                }
+                if (this.keys['ArrowDown'] || this.keys['KeyS']) {
+                    newY += 3;
+                    moved = true;
+                }
+                
+                // Interaction - IGUAL AO JOGO ORIGINAL
+                if (this.keys['Space'] || this.keys['Enter']) {
+                    this.handleInteraction();
+                }
+                
+                // Boundary checking
+                newX = Math.max(20, Math.min(newX, this.canvas.width - 20));
+                newY = Math.max(20, Math.min(newY, this.canvas.height - 20));
+                
+                if (moved) {
+                    this.playerX = newX;
+                    this.playerY = newY;
+                    this.lastAction.textContent = `Movimento para: X:${Math.round(this.playerX)}, Y:${Math.round(this.playerY)}`;
+                    this.updatePositions();
+                }
+            }
+            
+            handleInteraction() {
+                if (!this.gameState.interactionActive) {
+                    console.log('🎮 Interação executada!');
+                    
+                    // Simular tecla Space corretamente
+                    this.simulateKeyPress('Space', 150);
+                    
+                    this.lastAction.textContent = 'Última ação: INTERAÇÃO (Space enviado!)';
+                    
+                    // Verificar se está perto do NPC
+                    const distance = Math.sqrt(
+                        Math.pow(this.playerX - this.npcX, 2) + 
+                        Math.pow(this.playerY - this.npcY, 2)
+                    );
+                    
+                    console.log(`📏 Distância do NPC: ${Math.round(distance)}px`);
+                    
+                    if (distance < 60) {
+                        console.log('✅ Perto do NPC - abrindo diálogo!');
+                        this.openDialog();
+                    } else {
+                        console.log('❌ Longe do NPC - interação sem efeito');
+                        this.lastAction.textContent = `Interação executada - mas longe do NPC (${Math.round(distance)}px)`;
+                        
+                        // Feedback visual de que a interação foi executada mas sem resultado
+                        this.player.style.background = '#ffaa00';
+                        setTimeout(() => {
+                            this.player.style.background = '#ff69b4';
+                        }, 300);
+                    }
+                } else {
+                    console.log('⏸️ Interação bloqueada - diálogo ativo');
+                }
+            }
+            
+            checkNearNPC() {
+                const distance = Math.sqrt(
+                    Math.pow(this.playerX - this.npcX, 2) + 
+                    Math.pow(this.playerY - this.npcY, 2)
+                );
+                
+                if (distance < 60) {
+                    this.hint.style.display = 'block';
+                    this.interactionStatus.textContent = 'Perto do NPC - pode interagir!';
+                    this.interactionStatus.style.color = '#00ff00';
+                } else {
+                    this.hint.style.display = 'none';
+                    this.interactionStatus.textContent = `Longe do NPC (distância: ${Math.round(distance)}px)`;
+                    this.interactionStatus.style.color = '#ff6b6b';
+                }
+                
+                // Posicionar hint
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = rect.width / this.canvas.width;
+                const scaleY = rect.height / this.canvas.height;
+                this.hint.style.left = (rect.left + this.npcX * scaleX - 40) + 'px';
+                this.hint.style.top = (rect.top + this.npcY * scaleY - 60) + 'px';
+            }
+            
+            openDialog() {
+                this.gameState.interactionActive = true;
+                this.dialog.style.display = 'block';
+                this.lastAction.textContent = 'SUCESSO! Diálogo aberto via interação mobile!';
+            }
+            
+            showTouchIndicator(x, y, isInteraction = false) {
+                this.touchIndicator.style.display = 'block';
+                this.touchIndicator.style.left = (x - 30) + 'px';
+                this.touchIndicator.style.top = (y - 30) + 'px';
+                
+                if (isInteraction) {
+                    // Cor rosa para interação
+                    this.touchIndicator.style.borderColor = '#ff69b4';
+                    this.touchIndicator.style.background = 'rgba(255, 105, 180, 0.4)';
+                    this.touchIndicator.style.transform = 'scale(1.2)';
+                } else {
+                    // Cor dourada para movimento
+                    this.touchIndicator.style.borderColor = '#ffd700';
+                    this.touchIndicator.style.background = 'rgba(255, 215, 0, 0.2)';
+                    this.touchIndicator.style.transform = 'scale(1)';
+                }
+                
+                setTimeout(() => {
+                    this.touchIndicator.style.display = 'none';
+                    this.touchIndicator.style.transform = 'scale(1)';
+                }, 600);
+            }
+            
+            updatePositions() {
+                const rect = this.canvas.getBoundingClientRect();
+                const scaleX = rect.width / this.canvas.width;
+                const scaleY = rect.height / this.canvas.height;
+                
+                this.player.style.left = (rect.left + this.playerX * scaleX - 20) + 'px';
+                this.player.style.top = (rect.top + this.playerY * scaleY - 20) + 'px';
+                
+                this.npc.style.left = (rect.left + this.npcX * scaleX - 17.5) + 'px';
+                this.npc.style.top = (rect.top + this.npcY * scaleY - 17.5) + 'px';
+            }
+        }
+        
+        function closeDialog() {
+            document.getElementById('dialog').style.display = 'none';
+            if (window.testController) {
+                window.testController.gameState.interactionActive = false;
+                window.testController.lastAction.textContent = 'Diálogo fechado - pode se mover novamente!';
+            }
+        }
+        
+        // Inicializar
+        window.addEventListener('load', () => {
+            window.testController = new InteractionTestController();
+            console.log('🎮 Teste de Interação Mobile carregado!');
+            console.log('💡 Chegue perto do NPC dourado e toque duplo para interagir!');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+@import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+    color: white;
+    font-family: 'Pixelify Sans', cursive;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+#gameContainer {
+    position: relative;
+    border: 4px solid gold;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    background: #000;
+    max-width: 100vw;
+    max-height: 100vh;
+}
+
+#gameCanvas {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    width: 100%;
+    height: auto;
+    max-width: 800px;
+    max-height: 600px;
+}
+
+#ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.dialog {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 3px solid #ffd700;
+    border-radius: 10px;
+    padding: 20px;
+    max-width: 500px;
+    text-align: center;
+    pointer-events: auto;
+    display: none;
+}
+
+.dialog h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+.dialog p {
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.option-btn {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    border: none;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Pixelify Sans', cursive;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.option-btn:hover {
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+
+.option-btn.correct {
+    background: linear-gradient(45deg, #00ff00, #32cd32);
+}
+
+.option-btn.wrong {
+    background: linear-gradient(45deg, #ff0000, #dc143c);
+}
+
+.start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    text-align: center;
+    max-width: 600px;
+    margin: 20px;
+}
+
+.start-screen h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #ffd700, #ffed4a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.start-screen p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: #e1e5fe;
+}
+
+.level-indicator {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffd700;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: 2px solid #ffd700;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.sound-toggle {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(45deg, #4ecdc4, #44a08d);
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-family: 'Pixelify Sans', cursive;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    pointer-events: auto;
+    z-index: 15;
+}
+
+.sound-toggle:hover {
+    background: linear-gradient(45deg, #44a08d, #4ecdc4);
+    transform: scale(1.05);
+}
+
+.sound-toggle.muted {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+}
+
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-size: 12px;
+    text-align: center;
+    border: 2px solid #ffd700;
+    pointer-events: none;
+}
+
+.mobile-controls {
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    display: none;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 20px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.d-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    pointer-events: auto;
+}
+
+.d-pad-btn {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(45deg, #4ecdc4, #44a08d);
+    border: 3px solid #ffd700;
+    border-radius: 10px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.d-pad-btn:active {
+    background: linear-gradient(45deg, #44a08d, #4ecdc4);
+    transform: scale(0.95);
+}
+
+.d-pad-btn:nth-child(2) { /* UP */ }
+.d-pad-btn:nth-child(4) { /* LEFT */ }
+.d-pad-btn:nth-child(5) { /* CENTER - vazio */ 
+    background: transparent;
+    border: none;
+    cursor: default;
+}
+.d-pad-btn:nth-child(6) { /* RIGHT */ }
+.d-pad-btn:nth-child(8) { /* DOWN */ }
+
+.interact-btn {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    border: 3px solid #ffd700;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+    text-align: center;
+    pointer-events: auto;
+}
+
+.interact-btn:active {
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+    transform: scale(0.95);
+}
+
+.firework {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: firework 2s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes firework {
+    0% {
+        transform: scale(0) rotate(0deg);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5) rotate(180deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(3) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+#fireworks {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#finalMessage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #ff6b6b, #ffa500, #ffed4a);
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    border: 4px solid #ffd700;
+    display: none;
+    z-index: 25;
+    pointer-events: auto;
+}
+
+#finalMessage h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+#interactionHint {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 215, 0, 0.9);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: bold;
+    display: none;
+    animation: pulse 1.5s infinite;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.1); }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+    }
+    
+    #gameContainer {
+        border-width: 2px;
+        width: 100%;
+        max-width: 100vw;
+    }
+    
+    .mobile-controls {
+        display: flex;
+        bottom: 5px;
+    }
+    
+    .controls {
+        display: none;
+    }
+    
+    .level-indicator {
+        font-size: 12px;
+        padding: 8px;
+        top: 50px;
+    }
+    
+    .sound-toggle {
+        top: 5px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .d-pad-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .interact-btn {
+        width: 60px;
+        height: 60px;
+        font-size: 10px;
+    }
+    
+    .dialog {
+        max-width: 90%;
+        padding: 15px;
+        bottom: 10px;
+    }
+    
+    .dialog h3 {
+        font-size: 16px;
+    }
+    
+    .dialog p {
+        font-size: 14px;
+    }
+    
+    .option-btn {
+        padding: 10px 15px;
+        font-size: 12px;
+    }
+}

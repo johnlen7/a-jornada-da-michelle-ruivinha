@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Cena Final do Forte Copacabana</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 4px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: #000;
+            max-width: 900px;
+            max-height: 700px;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 800px;
+            height: 600px;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #ffd700;
+            border: 2px solid #ffd700;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #ff69b4;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        button:hover {
+            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div class="controls">
+            <h3>🎮 Teste da Cena Final</h3>
+            <button onclick="toggleMichelle()">Mostrar/Ocultar Michelle</button>
+            <button onclick="toggleRing()">Mostrar/Ocultar Aliança</button>
+            <button onclick="toggleFinalScene()">Ativar/Desativar Cena Final</button>
+            <br><small>Use as setas ↑↓←→ para mover a Michelle</small>
+        </div>
+        
+        <div class="info">
+            💍 Teste da cena final do pedido de casamento<br>
+            🏰 Forte Copacabana com John no topo da ponte
+        </div>
+    </div>
+
+    <script>
+        // Mini classe SceneRenderer apenas para teste
+        class TestSceneRenderer {
+            constructor(ctx, canvas) {
+                this.ctx = ctx;
+                this.canvas = canvas;
+                
+                // Carregar sprites
+                this.michelleSprite = new Image();
+                this.michelleSprite.src = 'michelle_sprite.png';
+                
+                this.johnSprite = new Image();
+                this.johnSprite.src = 'sprite_johnlennon.png';
+                
+                // Estados de teste
+                this.showMichelle = true;
+                this.showRing = true;
+                this.showFinalScene = true;
+                
+                // Posição da Michelle (controlável)
+                this.michelleX = 320;
+                this.michelleY = 450;
+            }
+
+            // Desenhar Michelle
+            drawPlayer(x, y) {
+                if (!this.showMichelle) return;
+                
+                const ctx = this.ctx;
+                
+                if (this.michelleSprite.complete && this.michelleSprite.naturalWidth) {
+                    // Sombra
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetX = 3;
+                    ctx.shadowOffsetY = 3;
+                    ctx.drawImage(this.michelleSprite, x - 32, y - 64, 64, 64);
+                    ctx.restore();
+                } else {
+                    // Fallback
+                    ctx.fillStyle = '#FF1493';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 32, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Cena final simplificada
+            drawFinalScene() {
+                if (!this.showFinalScene) return;
+                
+                const ctx = this.ctx;
+                const canvas = this.canvas;
+                
+                // Posição da aliança
+                const ringX = canvas.width / 2;
+                const ringY = canvas.height * 0.6;
+                
+                if (this.showRing) {
+                    ctx.save();
+                    
+                    // Brilho ao redor da aliança
+                    const gradient = ctx.createRadialGradient(ringX, ringY, 10, ringX, ringY, 50);
+                    gradient.addColorStop(0, 'rgba(255, 215, 0, 0.3)');
+                    gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(ringX, ringY, 50, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Aliança principal
+                    ctx.beginPath();
+                    ctx.arc(ringX, ringY, 24, 0, Math.PI * 2);
+                    ctx.lineWidth = 8;
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 16;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                    
+                    // Pedra da aliança
+                    ctx.beginPath();
+                    ctx.arc(ringX, ringY - 20, 7, 0, Math.PI * 2);
+                    ctx.fillStyle = '#B9F2FF';
+                    ctx.fill();
+                    
+                    // Brilhos extras
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(ringX - 10, ringY - 25, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.arc(ringX + 8, ringY - 15, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.restore();
+                }
+            }
+
+            // Forte Copacabana completo
+            drawForteCopacabana() {
+                const ctx = this.ctx;
+                const canvas = this.canvas;
+                
+                // === CÉU AZUL COM GRADIENTE ===
+                const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height * 0.6);
+                skyGradient.addColorStop(0, '#87CEEB');
+                skyGradient.addColorStop(0.5, '#4682B4');
+                skyGradient.addColorStop(1, '#2F4F4F');
+                ctx.fillStyle = skyGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
+                
+                // === NUVENS BRANCAS ===
+                this.drawCloud(100, 80);
+                this.drawCloud(550, 100);
+                this.drawCloud(300, 60);
+                
+                // === OCEANO COM GRADIENTE ===
+                const oceanGradient = ctx.createLinearGradient(0, canvas.height * 0.6, 0, canvas.height);
+                oceanGradient.addColorStop(0, '#1E90FF');
+                oceanGradient.addColorStop(0.5, '#0066CC');
+                oceanGradient.addColorStop(1, '#003366');
+                ctx.fillStyle = oceanGradient;
+                ctx.fillRect(0, canvas.height * 0.6, canvas.width, canvas.height * 0.4);
+                
+                // === ONDAS ANIMADAS ===
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 2;
+                const time = Date.now() * 0.001;
+                
+                for(let i = 0; i < 4; i++) {
+                    ctx.beginPath();
+                    const waveY = canvas.height * 0.6 + 15 + i * 20;
+                    
+                    for(let x = 0; x < canvas.width; x += 8) {
+                        const y = waveY + Math.sin(x * 0.02 + time * (i + 1)) * 4;
+                        if(x === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+                
+                // === MURALHA DO FORTE ===
+                const fortWallY = canvas.height * 0.75;
+                ctx.fillStyle = '#A98867';
+                ctx.fillRect(0, fortWallY, canvas.width, canvas.height * 0.25);
+                
+                // Detalhes da muralha
+                ctx.fillStyle = '#8B7355';
+                for(let i = 0; i < 10; i++) {
+                    const x = i * 80 + 40;
+                    ctx.fillRect(x, fortWallY - 25, 35, 25);
+                }
+                
+                // === PISO DE PEDRA ===
+                ctx.fillStyle = '#D2B48C';
+                ctx.fillRect(0, fortWallY + 30, canvas.width, canvas.height * 0.2);
+                
+                // === BANDEIRAS ===
+                this.drawAnimatedFlag(80, fortWallY - 60, '#FF0000', time);
+                this.drawAnimatedFlag(canvas.width - 80, fortWallY - 60, '#FFFF00', time);
+                
+                // === CAMINHO E JOHN ===
+                const johnX = canvas.width / 2;
+                const johnY = canvas.height * 0.45;
+                
+                this.drawPath(johnX, fortWallY, johnY + 32);
+                this.drawJohnWithHeart(johnX, johnY);
+            }
+
+            drawCloud(x, y) {
+                const ctx = this.ctx;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 18, 0, Math.PI * 2);
+                ctx.arc(x + 22, y, 24, 0, Math.PI * 2);
+                ctx.arc(x + 45, y, 18, 0, Math.PI * 2);
+                ctx.arc(x + 12, y - 12, 14, 0, Math.PI * 2);
+                ctx.arc(x + 32, y - 12, 16, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            drawAnimatedFlag(x, y, color, time) {
+                const ctx = this.ctx;
+                
+                // Mastro
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(x, y, 6, 50);
+                
+                // Bandeira ondulante
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x + 6, y + 5);
+                
+                for(let i = 0; i < 25; i++) {
+                    const flagX = x + 6 + i;
+                    const wave = Math.sin(time + i * 0.2) * 3;
+                    const flagY = y + 5 + wave;
+                    ctx.lineTo(flagX, flagY);
+                }
+                
+                for(let i = 25; i >= 0; i--) {
+                    const flagX = x + 6 + i;
+                    const wave = Math.sin(time + i * 0.2) * 3;
+                    const flagY = y + 20 + wave;
+                    ctx.lineTo(flagX, flagY);
+                }
+                
+                ctx.fill();
+            }
+
+            drawPath(johnX, startY, endY) {
+                const ctx = this.ctx;
+                const pathWidth = 60;
+                const numSteps = 8;
+                const stepHeight = (endY - startY) / numSteps;
+                
+                // Sombra do caminho
+                ctx.fillStyle = 'rgba(90, 77, 65, 0.6)';
+                ctx.beginPath();
+                ctx.moveTo(johnX - pathWidth/2 - 5, startY);
+                ctx.lineTo(johnX + pathWidth/2 + 5, startY);
+                ctx.lineTo(johnX + pathWidth/2, endY + 5);
+                ctx.lineTo(johnX - pathWidth/2, endY + 5);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Degraus
+                for (let i = 0; i < numSteps; i++) {
+                    const y = startY + i * stepHeight;
+                    const stepWidth = pathWidth - (i * 4);
+                    
+                    ctx.fillStyle = `rgb(${180 + Math.random() * 30}, ${150 + Math.random() * 30}, ${120 + Math.random() * 30})`;
+                    ctx.beginPath();
+                    ctx.moveTo(johnX - stepWidth/2, y);
+                    ctx.lineTo(johnX + stepWidth/2, y);
+                    ctx.lineTo(johnX + (stepWidth-8)/2, y + stepHeight - 2);
+                    ctx.lineTo(johnX - (stepWidth-8)/2, y + stepHeight - 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Borda do degrau
+                    ctx.strokeStyle = '#71614A';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+
+            drawJohnWithHeart(johnX, johnY) {
+                const ctx = this.ctx;
+                
+                // Coração grande atrás do John
+                ctx.save();
+                ctx.globalAlpha = 0.85;
+                ctx.beginPath();
+                ctx.moveTo(johnX, johnY);
+                ctx.bezierCurveTo(johnX - 64, johnY - 64, johnX - 64, johnY + 48, johnX, johnY + 96);
+                ctx.bezierCurveTo(johnX + 64, johnY + 48, johnX + 64, johnY - 64, johnX, johnY);
+                ctx.closePath();
+                ctx.fillStyle = '#ff3366';
+                ctx.shadowColor = '#ffb6c1';
+                ctx.shadowBlur = 30;
+                ctx.fill();
+                ctx.restore();
+                
+                // Brilho dourado ao redor do John
+                const glowRadius = 40 + Math.sin(Date.now() * 0.002) * 5;
+                const gradient = ctx.createRadialGradient(johnX, johnY, 10, johnX, johnY, glowRadius);
+                gradient.addColorStop(0, 'rgba(255, 223, 0, 0.3)');
+                gradient.addColorStop(1, 'rgba(255, 223, 0, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(johnX, johnY, glowRadius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Sprite do John
+                if (this.johnSprite.complete && this.johnSprite.naturalWidth) {
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowOffsetX = 5;
+                    ctx.shadowOffsetY = 5;
+                    ctx.drawImage(this.johnSprite, johnX - 32, johnY - 64, 64, 64);
+                    ctx.restore();
+                } else {
+                    // Fallback
+                    ctx.fillStyle = '#DC143C';
+                    ctx.beginPath();
+                    ctx.arc(johnX, johnY, 32, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            render() {
+                const ctx = this.ctx;
+                ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Desenhar cenário do forte
+                this.drawForteCopacabana();
+                
+                // Desenhar Michelle
+                this.drawPlayer(this.michelleX, this.michelleY);
+                
+                // Desenhar elementos da cena final
+                this.drawFinalScene();
+                
+                // Loop de animação
+                requestAnimationFrame(() => this.render());
+            }
+        }
+
+        // Inicializar teste
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const testRenderer = new TestSceneRenderer(ctx, canvas);
+
+        // Controles de teste
+        window.toggleMichelle = () => {
+            testRenderer.showMichelle = !testRenderer.showMichelle;
+        };
+
+        window.toggleRing = () => {
+            testRenderer.showRing = !testRenderer.showRing;
+        };
+
+        window.toggleFinalScene = () => {
+            testRenderer.showFinalScene = !testRenderer.showFinalScene;
+        };
+
+        // Controles de movimento da Michelle
+        document.addEventListener('keydown', (e) => {
+            const speed = 5;
+            switch(e.key) {
+                case 'ArrowUp':
+                    testRenderer.michelleY = Math.max(100, testRenderer.michelleY - speed);
+                    break;
+                case 'ArrowDown':
+                    testRenderer.michelleY = Math.min(550, testRenderer.michelleY + speed);
+                    break;
+                case 'ArrowLeft':
+                    testRenderer.michelleX = Math.max(50, testRenderer.michelleX - speed);
+                    break;
+                case 'ArrowRight':
+                    testRenderer.michelleX = Math.min(750, testRenderer.michelleX + speed);
+                    break;
+            }
+        });
+
+        // Iniciar renderização
+        testRenderer.render();
+
+        // Informações no console
+        console.log('🎮 Teste da Cena Final Carregado!');
+        console.log('📍 Use as setas para mover a Michelle');
+        console.log('🎛️ Use os botões para alternar elementos');
+        console.log('💍 Posição da Michelle:', () => `(${testRenderer.michelleX}, ${testRenderer.michelleY})`);
+    </script>
+</body>
+</html>

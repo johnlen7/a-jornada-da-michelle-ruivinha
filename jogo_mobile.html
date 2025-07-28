@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Jornada de Michelle - Mobile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 3px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            max-width: 400px;
+            max-height: 600px;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: 70%;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .dialog {
+            position: absolute;
+            bottom: 120px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            pointer-events: auto;
+            display: none;
+            max-height: 40%;
+            overflow-y: auto;
+        }
+        
+        .dialog h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .dialog p {
+            margin-bottom: 10px;
+            line-height: 1.3;
+            font-size: 14px;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .option-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 13px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .option-btn:hover {
+            background: linear-gradient(45deg, #ff7675, #fd79a8);
+            transform: translateY(-1px);
+        }
+        
+        .option-btn.correct {
+            background: linear-gradient(45deg, #00b894, #00cec9);
+        }
+        
+        .option-btn.incorrect {
+            background: linear-gradient(45deg, #e17055, #d63031);
+        }
+        
+        .sound-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 2px solid #ffd700;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Pixelify Sans', cursive;
+            pointer-events: auto;
+        }
+        
+        .level-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid #ffd700;
+        }
+        
+        .mobile-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            pointer-events: auto;
+        }
+        
+        .d-pad {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 5px;
+            width: 120px;
+            height: 120px;
+        }
+        
+        .d-pad-btn {
+            background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+            border: 2px solid #666;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+        }
+        
+        .d-pad-btn:active {
+            background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+            transform: scale(0.95);
+        }
+        
+        .interact-btn {
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .interact-btn:active {
+            background: linear-gradient(145deg, #45a049, #4CAF50);
+            transform: scale(0.95);
+        }
+        
+        #interactionHint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+            border: 2px solid #ffd700;
+        }
+        
+        #finalMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #4a0e4e, #2a0845);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            display: none;
+            z-index: 400;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            max-width: 90%;
+        }
+        
+        #finalMessage h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        #finalMessage p {
+            font-size: 16px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        #fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 350;
+        }
+        
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: firework 1.5s ease-out forwards;
+        }
+        
+        @keyframes firework {
+            0% {
+                opacity: 1;
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <!-- UI Elements -->
+        <div id="ui">
+            <!-- Level Indicator -->
+            <div id="levelIndicator" class="level-indicator"></div>
+            
+            <!-- Sound Toggle -->
+            <button id="soundToggle" class="sound-toggle">🔊 SOM</button>
+            
+            <!-- Mobile Controls -->
+            <div class="mobile-controls" id="mobileControls">
+                <div class="d-pad">
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="up">↑</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="left">←</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="right">→</div>
+                    <div></div>
+                    <div class="d-pad-btn" data-direction="down">↓</div>
+                    <div></div>
+                </div>
+                
+                <div class="interact-btn" id="interactBtn">
+                    INTERAGIR
+                </div>
+            </div>
+            
+            <!-- Interaction Hint -->
+            <div id="interactionHint">Toque INTERAGIR</div>
+            
+            <!-- Question Dialog -->
+            <div id="questionDialog" class="dialog">
+                <h3 id="questionTitle"></h3>
+                <p id="questionText"></p>
+                <div id="questionOptions" class="options"></div>
+                <p id="questionResult"></p>
+            </div>
+        </div>
+        
+        <!-- Fireworks Container -->
+        <div id="fireworks"></div>
+        
+        <!-- Final Message -->
+        <div id="finalMessage">
+            <h2>💖 Parabéns! 💖</h2>
+            <p>Vocês completaram a jornada do amor!</p>
+            <p>Que essa seja apenas o começo de uma nova aventura juntos! ❤️</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="scenes.js"></script>
+    <script src="game.js"></script>
+    <script>
+        // Initialize game when page loads
+        let gameManager;
+        
+        window.addEventListener('load', () => {
+            gameManager = new GameManager();
+        });
+    </script>
+</body>
+</html>

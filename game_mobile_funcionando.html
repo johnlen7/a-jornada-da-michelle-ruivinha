@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>A Jornada de Michelle - Mobile</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 4px solid gold;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            background: #000;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: auto;
+            max-width: 800px;
+            max-height: 600px;
+            touch-action: none;
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.3s ease;
+            background: rgba(255, 215, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .touch-instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            text-align: center;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .sound-toggle {
+            position: absolute;
+            top: 10px;
+            right: 60px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 1000;
+            font-size: 20px;
+            border: 2px solid #ffd700;
+        }
+
+        .fullscreen-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 1000;
+            font-size: 20px;
+            border: 2px solid #ffd700;
+        }
+
+        .level-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            pointer-events: none;
+            border: 2px solid #ffd700;
+        }
+
+        .interaction-hint {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+        }
+
+        .dialog {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 90%;
+            width: 350px;
+            display: none;
+            z-index: 30;
+            pointer-events: auto;
+        }
+
+        .dialog h3 {
+            color: #ffd700;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .dialog p {
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .option-btn {
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            border: 2px solid #ffd700;
+            border-radius: 5px;
+            color: white;
+            padding: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Pixelify Sans', cursive;
+            text-align: center;
+        }
+
+        .option-btn:hover {
+            background: linear-gradient(45deg, #A0522D, #8B4513);
+            transform: scale(1.05);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(45deg, #228B22, #32CD32);
+            animation: pulse 0.6s;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(45deg, #8B0000, #DC143C);
+            animation: shake 0.6s;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .fireworks {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .firework {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            animation: firework 2s ease-out forwards;
+        }
+
+        @keyframes firework {
+            0% {
+                opacity: 1;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.5);
+            }
+        }
+
+        .final-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.98);
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            display: none;
+            z-index: 40;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .final-message h2 {
+            color: #ffd700;
+            font-size: 22px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .final-message p {
+            font-size: 16px;
+            line-height: 1.4;
+            color: #ff69b4;
+        }
+
+        /* Responsivo para mobile */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+            
+            #gameContainer {
+                border: 2px solid gold;
+                border-radius: 5px;
+                width: 100vw;
+                height: 100vh;
+            }
+            
+            #gameCanvas {
+                max-width: 100vw;
+                max-height: 100vh;
+            }
+            
+            .touch-instructions {
+                font-size: 12px;
+                padding: 8px 15px;
+            }
+            
+            .dialog {
+                width: 95%;
+                max-width: 300px;
+            }
+        }
+
+        /* Orientação portrait - avisar para girar */
+        @media (orientation: portrait) {
+            body::after {
+                content: "Por favor, gire o dispositivo para jogar";
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: #000;
+                color: #fff;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                font-size: 18px;
+                text-align: center;
+                padding: 20px;
+            }
+        }
+
+        .start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(45deg, #8B4513, #A0522D);
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            text-align: center;
+            z-index: 2000;
+            pointer-events: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .start-button:hover {
+            background: linear-gradient(45deg, #A0522D, #8B4513);
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .start-button.hidden {
+            display: none;
+        }
+
+        /* Esconder scrollbar */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        html {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="ui">
+            <div class="sound-toggle" id="soundToggle">🔊</div>
+            <div class="fullscreen-btn" id="fullscreenBtn">⛶</div>
+            
+            <div class="level-indicator" id="levelIndicator">
+                Vila Mágica do Amor ❤️
+            </div>
+            
+            <div class="interaction-hint" id="interactionHint">
+                Toque na tela para interagir
+            </div>
+            
+            <div class="touch-indicator" id="touchIndicator"></div>
+            
+            <div class="touch-instructions" id="touchInstructions">
+                📱 Toque na tela para começar • Mover Michelle • Toque duplo para interagir
+            </div>
+            
+            <div class="dialog" id="questionDialog">
+                <h3 id="questionTitle">Pergunta</h3>
+                <p id="questionText"></p>
+                <div class="options" id="questionOptions"></div>
+                <p id="questionResult"></p>
+            </div>
+            
+            <div class="final-message" id="finalMessage">
+                <h2>💖 Parabéns! 💖</h2>
+                <p>Não é fim de jogo...<br>é o começo de uma nova jornada ❤️</p>
+            </div>
+            
+            <div class="start-button" id="startButton">
+                🎮 Iniciar Jogo 🎮
+            </div>
+        </div>
+        
+        <div class="fireworks" id="fireworks"></div>
+    </div>
+
+    <!-- Scripts na mesma ordem que o game_atualizado.html -->
+    <script src="audio.js"></script>
+    <script src="loading.js"></script>
+    <script src="game.js"></script>
+    <script src="scenes.js"></script>
+    <script>
+        console.log('🎮 Iniciando jogo mobile...');
+        
+        // Aguardar um momento para garantir que todos os scripts foram carregados
+        setTimeout(() => {
+            console.log('🎮 Inicializando GameManager...');
+            // Inicializar o jogo (igual ao game_atualizado.html)
+            window.game = new GameManager();
+            console.log('✅ GameManager inicializado:', window.game);
+        }, 100);
+
+        // Carregar imagens das casas do mapa
+        const mapHouseImages = {
+            hogwarts: new Image(),
+            centralperk: new Image(),
+            caminhoforte: new Image(),
+            fortecopacabana: new Image()
+        };
+        mapHouseImages.hogwarts.src = 'casa_hogwarts.png';
+        mapHouseImages.centralperk.src = 'centralperk.png';
+        mapHouseImages.caminhoforte.src = 'caminho_forte.png';
+        mapHouseImages.fortecopacabana.src = 'forte_copacabana.png';
+
+        // Controles Mobile Touch
+        class TouchController {
+            constructor() {
+                this.gameCanvas = document.getElementById('gameCanvas');
+                this.touchIndicator = document.getElementById('touchIndicator');
+                this.lastTapTime = 0;
+                this.doubleTapDelay = 300;
+                this.centerZone = 50; // Área central para interação
+                this.isProcessingTouch = false;
+                this.init();
+            }
+            
+            init() {
+                console.log('🎮 Inicializando controles touch...');
+                this.gameCanvas.addEventListener('touchstart', (e) => this.handleTouch(e), { passive: false });
+                this.gameCanvas.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
+                
+                // Adicionar também evento de clique para desktop/teste
+                this.gameCanvas.addEventListener('click', (e) => this.handleClick(e), { passive: false });
+                
+                console.log('✅ Controles touch inicializados');
+            }
+            
+            handleClick(event) {
+                // Simular um toque para desktop/teste
+                const rect = this.gameCanvas.getBoundingClientRect();
+                const fakeTouch = {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                };
+                
+                const fakeEvent = {
+                    preventDefault: () => {},
+                    touches: [fakeTouch]
+                };
+                
+                this.handleTouch(fakeEvent);
+            }
+            
+            handleTouch(event) {
+                event.preventDefault();
+                if (this.isProcessingTouch) return;
+                
+                console.log('👆 Toque detectado');
+                this.isProcessingTouch = true;
+                const touch = event.touches[0];
+                const rect = this.gameCanvas.getBoundingClientRect();
+                
+                const canvasX = (touch.clientX - rect.left) * (800 / rect.width);
+                const canvasY = (touch.clientY - rect.top) * (600 / rect.height);
+                
+                console.log(`Posição do toque: ${canvasX}, ${canvasY}`);
+                
+                const centerX = 400;
+                const centerY = 300;
+                const deltaX = canvasX - centerX;
+                const deltaY = canvasY - centerY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                this.showTouchIndicator(touch.clientX - rect.left, touch.clientY - rect.top);
+                
+                const currentTime = Date.now();
+                const timeSinceLastTap = currentTime - this.lastTapTime;
+                
+                // Double tap
+                if (timeSinceLastTap < this.doubleTapDelay && timeSinceLastTap > 50) {
+                    console.log('🎯 Double tap detectado!');
+                    this.handleInteraction();
+                    this.lastTapTime = 0;
+                    setTimeout(() => { this.isProcessingTouch = false; }, 150);
+                    return;
+                }
+                
+                this.lastTapTime = currentTime;
+                
+                // Toque no centro = interação após delay OU avançar tela inicial
+                if (distance < this.centerZone) {
+                    console.log('🎯 Toque no centro detectado');
+                    
+                    // Se estamos na tela inicial, avançar para o mapa
+                    if (window.game && window.game.gameState && window.game.gameState.currentScreen === 'start') {
+                        console.log('📱 Avançando da tela inicial para o mapa');
+                        window.game.gameState.currentScreen = 'map';
+                        window.game.gameState.canMove = true;
+                        setTimeout(() => { this.isProcessingTouch = false; }, 100);
+                        return;
+                    }
+                    
+                    setTimeout(() => {
+                        if (Date.now() - this.lastTapTime >= this.doubleTapDelay) {
+                            this.handleInteraction();
+                        }
+                    }, this.doubleTapDelay + 50);
+                    setTimeout(() => { this.isProcessingTouch = false; }, this.doubleTapDelay + 100);
+                    return;
+                }
+                
+                // Movimento
+                let direction;
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    direction = deltaX > 0 ? 'ArrowRight' : 'ArrowLeft';
+                } else {
+                    direction = deltaY > 0 ? 'ArrowDown' : 'ArrowUp';
+                }
+                
+                this.executeMovement(direction);
+                setTimeout(() => { this.isProcessingTouch = false; }, 200);
+            }
+            
+            handleTouchEnd(event) {
+                setTimeout(() => { this.isProcessingTouch = false; }, 50);
+            }
+            
+            executeMovement(direction) {
+                const steps = 3;
+                const stepDelay = 80;
+                
+                for (let i = 0; i < steps; i++) {
+                    setTimeout(() => {
+                        this.simulateKeyPress(direction, stepDelay * 0.8);
+                    }, i * stepDelay);
+                }
+                
+                console.log(`🚶‍♀️ Movimento: ${direction}`);
+            }
+            
+            handleInteraction() {
+                this.simulateKeyPress('Space', 150);
+                console.log('💫 Interação executada!');
+            }
+            
+            simulateKeyPress(key, duration = 100) {
+                const keyCode = {
+                    'ArrowUp': 38,
+                    'ArrowDown': 40,
+                    'ArrowLeft': 37,
+                    'ArrowRight': 39,
+                    'Space': 32
+                }[key] || 32;
+                
+                const keyDownEvent = new KeyboardEvent('keydown', {
+                    key: key,
+                    keyCode: keyCode,
+                    which: keyCode,
+                    bubbles: true,
+                    cancelable: true
+                });
+                
+                document.dispatchEvent(keyDownEvent);
+                
+                setTimeout(() => {
+                    const keyUpEvent = new KeyboardEvent('keyup', {
+                        key: key,
+                        keyCode: keyCode,
+                        which: keyCode,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    document.dispatchEvent(keyUpEvent);
+                }, duration);
+            }
+            
+            showTouchIndicator(x, y) {
+                if (!this.touchIndicator) return;
+                
+                this.touchIndicator.style.display = 'block';
+                this.touchIndicator.style.left = (x - 30) + 'px';
+                this.touchIndicator.style.top = (y - 30) + 'px';
+                this.touchIndicator.style.opacity = '1';
+                
+                setTimeout(() => {
+                    if (this.touchIndicator) {
+                        this.touchIndicator.style.opacity = '0';
+                        setTimeout(() => {
+                            this.touchIndicator.style.display = 'none';
+                        }, 300);
+                    }
+                }, 600);
+            }
+        }
+
+        // Função para iniciar o jogo
+        function startGame() {
+            console.log('🎮 Botão iniciar pressionado');
+            const startButton = document.getElementById('startButton');
+            startButton.classList.add('hidden');
+            
+            // Forçar início do jogo
+            if (window.game && window.game.gameState) {
+                window.game.gameState.gameStarted = true;
+                window.game.gameState.currentScreen = 'start';
+                console.log('✅ Jogo iniciado manualmente');
+            }
+            
+            // Inicializar controles se ainda não foram
+            if (!touchController) {
+                touchController = new TouchController();
+            }
+            
+            // Tentar fullscreen
+            enterFullscreen();
+        }
+
+        // Fullscreen
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+            
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(err => {
+                    console.log('Orientação não pôde ser travada:', err);
+                });
+            }
+        }
+
+        document.getElementById('fullscreenBtn').addEventListener('click', enterFullscreen);
+        document.getElementById('startButton').addEventListener('click', startGame);
+
+        // Prevenir zoom
+        document.addEventListener('touchmove', function (event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Prevenir context menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Inicialização
+        let touchController;
+        
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🎮 DOM carregado, verificando jogo...');
+            
+            // Aguardar um pouco mais para garantir que o jogo foi inicializado
+            setTimeout(() => {
+                if (window.game) {
+                    console.log('✅ Jogo encontrado, inicializando controles...');
+                    touchController = new TouchController();
+                    
+                    // Adicionar listeners para teclado também (backup)
+                    document.addEventListener('keydown', function(e) {
+                        console.log('🎹 Tecla pressionada:', e.key);
+                    });
+                    
+                } else {
+                    console.error('❌ Jogo não foi inicializado corretamente');
+                    // Tentar inicializar novamente
+                    window.game = new GameManager();
+                    touchController = new TouchController();
+                }
+            }, 200);
+
+            if (window.game && window.game.mapLocations) {
+                window.game.mapLocations = [
+                    { name: "Quarto Hogwarts", x: 150, y: 200, unlocked: true, color: "#8B4513", houseColor: "#654321" },
+                    { name: "Central Perk", x: 650, y: 200, unlocked: false, color: "#FF8C00", houseColor: "#CD853F" },
+                    { name: "Caminho Forte", x: 400, y: 100, unlocked: false, color: "#4682B4", houseColor: "#5F9EA0" },
+                    { name: "Forte Copacabana", x: 400, y: 450, unlocked: false, color: "#DAA520", houseColor: "#B8860B", isFort: true }
+                ];
+            }
+
+            if (window.SceneRenderer && window.SceneRenderer.prototype) {
+                window.SceneRenderer.prototype.drawMap = function(playerX, playerY, mapLocations) {
+                    const ctx = this.ctx;
+                    const canvas = this.canvas;
+                    // Fundo verde
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    // Caminhos da vila
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(0, 290, canvas.width, 20); // caminho horizontal
+                    ctx.fillRect(390, 0, 20, canvas.height); // caminho vertical
+                    // Casas e forte
+                    mapLocations.forEach((location, index) => {
+                        this.drawMapLocation(location, index);
+                    });
+                    // Tesouro brilhando (opcional, se quiser implementar)
+                    if (this.updateTreasureGlow) this.updateTreasureGlow();
+                    // Jogador
+                    this.drawPlayer(playerX, playerY);
+                };
+                // Novo método para desenhar casas e forte usando imagens
+                window.SceneRenderer.prototype.drawMapLocation = function(location, index) {
+                    const ctx = this.ctx;
+                    const x = location.x;
+                    const y = location.y;
+                    // Selecionar imagem conforme o índice
+                    let img = null;
+                    if (index === 0) img = mapHouseImages.hogwarts;
+                    if (index === 1) img = mapHouseImages.centralperk;
+                    if (index === 2) img = mapHouseImages.caminhoforte;
+                    if (index === 3) img = mapHouseImages.fortecopacabana;
+                    // Desenhar imagem se carregada
+                    if (img && img.complete && img.naturalWidth) {
+                        let w = 70, h = 70;
+                        if (index === 3) { w = 90; h = 90; } // Forte maior
+                        ctx.save();
+                        ctx.globalAlpha = location.unlocked ? 1 : 0.5;
+                        ctx.drawImage(img, x - w/2, y - h/2, w, h);
+                        ctx.restore();
+                    } else {
+                        // Fallback: desenho antigo
+                        if (location.isFort) {
+                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                            ctx.fillRect(x-60, y-40, 120, 80);
+                            ctx.fillRect(x-50, y-30, 100, 60);
+                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                            ctx.fillRect(x-70, y-50, 20, 30);
+                            ctx.fillRect(x+50, y-50, 20, 30);
+                        } else {
+                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
+                            ctx.fillRect(x-30, y-20, 60, 40);
+                            ctx.fillStyle = location.unlocked ? '#8B0000' : '#2F2F2F';
+                            ctx.beginPath();
+                            ctx.moveTo(x-35, y-20);
+                            ctx.lineTo(x, y-50);
+                            ctx.lineTo(x+35, y-20);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.fillStyle = location.unlocked ? '#654321' : '#1F1F1F';
+                            ctx.fillRect(x-8, y-5, 16, 25);
+                            ctx.fillStyle = location.unlocked ? '#87CEEB' : '#2F2F2F';
+                            ctx.fillRect(x-20, y-15, 8, 8);
+                            ctx.fillRect(x+12, y-15, 8, 8);
+                        }
+                    }
+                    // Nome da localização
+                    ctx.fillStyle = location.unlocked ? '#FFFFFF' : '#808080';
+                    ctx.font = '12px Pixelify Sans';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(location.name, x, y+40);
+                    // Cadeado se bloqueado
+                    if (!location.unlocked) {
+                        ctx.fillStyle = '#FF0000';
+                        ctx.font = '20px Arial';
+                        ctx.fillText('🔒', x, y-60);
+                    }
+                };
+            }
+        });
+
+        // Ajustar canvas quando orientação mudar
+        window.addEventListener('orientationchange', function() {
+            setTimeout(function() {
+                if (window.game && window.game.renderer) {
+                    window.game.renderer.resizeCanvas();
+                }
+            }, 100);
+        });
+
+        console.log('✅ Jogo mobile inicializado com controles touch!');
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Mini Game Hogwarts - Pedido Especial</title>
+    <style>
+        body { background-color: #222; color: white; text-align: center; }
+        canvas { border: 4px solid gold; background-color: black; display: block; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let gameState = {
+    currentLevel: 0,
+    michelleX: 350,
+    michelleY: 450
+};
+
+const images = {};
+const imageFiles = {
+    banner: 'banner_corvinal.png',
+    cama: 'cama_hogwarts.png',
+    chapeu: 'chapeu_seletor.png',
+    estante: 'estante_livros.png',
+    janela: 'janela_gotica.png',
+    michelle: 'michelle_sprite.png'
+};
+
+let imagesLoaded = 0;
+const totalImages = Object.keys(imageFiles).length;
+
+for (let key in imageFiles) {
+    images[key] = new Image();
+    images[key].src = imageFiles[key];
+    images[key].onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === totalImages) {
+            requestAnimationFrame(gameLoop);
+        }
+    };
+}
+
+function drawLevelDecorations() {
+    if (gameState.currentLevel === 0) {  // Hogwarts
+        ctx.fillStyle = '#1a0d4d';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.drawImage(images.banner, 60, 80);
+        ctx.drawImage(images.cama, 550, 320);
+        ctx.drawImage(images.chapeu, 300, 200);
+        ctx.drawImage(images.estante, 400, 300);
+        ctx.drawImage(images.janela, 100, 100);
+
+        ctx.drawImage(images.michelle, gameState.michelleX, gameState.michelleY, 64, 64);
+    }
+}
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawLevelDecorations();
+    requestAnimationFrame(gameLoop);
+}
+
+document.addEventListener('keydown', (e) => {
+    const speed = 5;
+    if (e.key === 'ArrowLeft') gameState.michelleX -= speed;
+    if (e.key === 'ArrowRight') gameState.michelleX += speed;
+    if (e.key === 'ArrowUp') gameState.michelleY -= speed;
+    if (e.key === 'ArrowDown') gameState.michelleY += speed;
+});
+</script>
+</body>
+</html>

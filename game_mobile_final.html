@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>A Jornada de Michelle - Mobile Funcional</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        
+        body {
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            touch-action: manipulation;
+        }
+        
+        #gameContainer {
+            position: relative;
+            border: 2px solid gold;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+        
+        #gameCanvas {
+            display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .debug-log {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ffd700;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 10px;
+            max-width: 250px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #ffd700;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.2);
+            pointer-events: none;
+            z-index: 25;
+            display: none;
+        }
+        
+        .sound-toggle {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #ffd700;
+            border-radius: 20px;
+            color: #ffd700;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 11px;
+            pointer-events: auto;
+            z-index: 50;
+            touch-action: manipulation;
+        }
+        
+        .level-indicator {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="ui">
+            <div class="sound-toggle" id="soundToggle">🔊</div>
+            <div class="level-indicator" id="levelIndicator">
+                Vila Mágica do Amor ❤️
+            </div>
+            <div class="debug-log" id="debugLog">Inicializando...</div>
+            <div class="touch-indicator" id="touchIndicator"></div>
+        </div>
+    </div>
+
+    <!-- Carregar scripts em ordem específica -->
+    <script>
+        // Debug helper
+        const debugLog = document.getElementById('debugLog');
+        function addDebugMessage(message) {
+            if (debugLog) {
+                debugLog.innerHTML += '<br>' + message;
+                debugLog.scrollTop = debugLog.scrollHeight;
+            }
+            console.log(message);
+        }
+
+        // Lista de scripts para carregar
+        const scriptsToLoad = [
+            'loading.js',
+            'audio.js', 
+            'scenes.js',
+            'game.js'
+        ];
+
+        let scriptsLoaded = 0;
+        const totalScripts = scriptsToLoad.length;
+
+        function loadScript(src, callback) {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                scriptsLoaded++;
+                addDebugMessage(`✅ ${src} carregado (${scriptsLoaded}/${totalScripts})`);
+                if (callback) callback();
+            };
+            script.onerror = function() {
+                addDebugMessage(`❌ Erro ao carregar ${src}`);
+                if (callback) callback();
+            };
+            document.head.appendChild(script);
+        }
+
+        function loadAllScripts() {
+            addDebugMessage('🔄 Carregando scripts...');
+            
+            let index = 0;
+            function loadNext() {
+                if (index < scriptsToLoad.length) {
+                    loadScript(scriptsToLoad[index], () => {
+                        index++;
+                        loadNext();
+                    });
+                } else {
+                    initializeGame();
+                }
+            }
+            loadNext();
+        }
+
+        function initializeGame() {
+            addDebugMessage('🎮 Tentando inicializar jogo...');
+            
+            // Verificar se todas as classes estão disponíveis
+            if (typeof LoadingScreen === 'undefined') {
+                addDebugMessage('❌ LoadingScreen não encontrada');
+                return;
+            }
+            if (typeof AudioManager === 'undefined') {
+                addDebugMessage('❌ AudioManager não encontrada');
+                return;
+            }
+            if (typeof SceneRenderer === 'undefined') {
+                addDebugMessage('❌ SceneRenderer não encontrada');
+                return;
+            }
+            if (typeof GameManager === 'undefined') {
+                addDebugMessage('❌ GameManager não encontrada');
+                return;
+            }
+
+            try {
+                // Inicializar jogo
+                window.game = new GameManager();
+                addDebugMessage('✅ GameManager criado com sucesso');
+                
+                // Inicializar controle touch
+                initializeTouchController();
+                
+                addDebugMessage('🎉 Jogo inicializado completamente!');
+                
+                // Esconder debug log após 5 segundos
+                setTimeout(() => {
+                    if (debugLog) {
+                        debugLog.style.opacity = '0.3';
+                        debugLog.style.fontSize = '8px';
+                        debugLog.style.maxHeight = '50px';
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                addDebugMessage('❌ Erro na inicialização: ' + error.message);
+            }
+        }
+
+        function initializeTouchController() {
+            // TouchController simples e robusto
+            class TouchController {
+                constructor() {
+                    this.canvas = document.getElementById('gameCanvas');
+                    this.touchIndicator = document.getElementById('touchIndicator');
+                    
+                    if (!this.canvas) {
+                        addDebugMessage('❌ Canvas não encontrado');
+                        return;
+                    }
+                    
+                    this.lastTouchTime = 0;
+                    this.doubleTapDelay = 250;
+                    this.setupTouchEvents();
+                    
+                    addDebugMessage('✅ TouchController inicializado');
+                }
+                
+                setupTouchEvents() {
+                    this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: false });
+                    this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: false });
+                    this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: false });
+                    
+                    // Prevenir comportamentos padrão
+                    this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                    document.addEventListener('gesturestart', (e) => e.preventDefault());
+                }
+                
+                handleTouchStart(e) {
+                    e.preventDefault();
+                    this.isDragging = false;
+                }
+                
+                handleTouchMove(e) {
+                    e.preventDefault();
+                    this.isDragging = true;
+                }
+                
+                handleTouchEnd(e) {
+                    e.preventDefault();
+                    
+                    if (this.isDragging) {
+                        return; // Ignorar drags
+                    }
+                    
+                    if (!window.game) {
+                        addDebugMessage('⚠️ Jogo não disponível');
+                        return;
+                    }
+                    
+                    const touch = e.changedTouches[0];
+                    const rect = this.canvas.getBoundingClientRect();
+                    const scaleX = 800 / rect.width;
+                    const scaleY = 600 / rect.height;
+                    
+                    const touchX = (touch.clientX - rect.left) * scaleX;
+                    const touchY = (touch.clientY - rect.top) * scaleY;
+                    
+                    const currentTime = Date.now();
+                    const timeDiff = currentTime - this.lastTouchTime;
+                    
+                    // Mostrar indicador visual
+                    this.showTouchIndicator(touchX, touchY);
+                    
+                    // Verificar se é double tap
+                    if (timeDiff < this.doubleTapDelay) {
+                        this.handleInteraction();
+                        addDebugMessage('💫 Double tap - Interação');
+                    } else {
+                        // Verificar área morta central
+                        const centerX = 400;
+                        const centerY = 300;
+                        const deadZoneRadius = 60;
+                        
+                        const distanceFromCenter = Math.sqrt(
+                            Math.pow(touchX - centerX, 2) + Math.pow(touchY - centerY, 2)
+                        );
+                        
+                        if (distanceFromCenter <= deadZoneRadius) {
+                            this.handleInteraction();
+                            addDebugMessage('💫 Centro - Interação');
+                        } else {
+                            this.handleMovement(touchX, touchY);
+                            addDebugMessage('🚶‍♀️ Movimento');
+                        }
+                    }
+                    
+                    this.lastTouchTime = currentTime;
+                }
+                
+                handleMovement(touchX, touchY) {
+                    if (!window.game || !window.game.gameState.canMove) return;
+                    
+                    const centerX = 400;
+                    const centerY = 300;
+                    
+                    const deltaX = touchX - centerX;
+                    const deltaY = touchY - centerY;
+                    
+                    let direction = '';
+                    
+                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                        direction = deltaX > 0 ? 'ArrowRight' : 'ArrowLeft';
+                    } else {
+                        direction = deltaY > 0 ? 'ArrowDown' : 'ArrowUp';
+                    }
+                    
+                    // Executar múltiplos passos
+                    this.executeMovement(direction);
+                }
+                
+                executeMovement(direction) {
+                    if (!window.game) return;
+                    
+                    const steps = 3;
+                    let currentStep = 0;
+                    
+                    const moveStep = () => {
+                        if (currentStep >= steps || !window.game.gameState.canMove) {
+                            return;
+                        }
+                        
+                        // Criar evento de teclado
+                        const event = new KeyboardEvent('keydown', {
+                            key: direction,
+                            code: direction,
+                            keyCode: this.getKeyCode(direction)
+                        });
+                        
+                        // Usar o handleKeyDown do jogo se disponível
+                        if (window.game.handleKeyDown) {
+                            window.game.handleKeyDown(event);
+                        }
+                        
+                        currentStep++;
+                        
+                        if (currentStep < steps) {
+                            setTimeout(moveStep, 120);
+                        }
+                    };
+                    
+                    moveStep();
+                }
+                
+                handleInteraction() {
+                    if (!window.game) return;
+                    
+                    // Simular pressionar espaço
+                    const spaceEvent = new KeyboardEvent('keydown', {
+                        key: 'Space',
+                        code: 'Space',
+                        keyCode: 32
+                    });
+                    
+                    if (window.game.handleKeyDown) {
+                        window.game.handleKeyDown(spaceEvent);
+                    }
+                }
+                
+                getKeyCode(direction) {
+                    const codes = {
+                        'ArrowUp': 38,
+                        'ArrowDown': 40,
+                        'ArrowLeft': 37,
+                        'ArrowRight': 39
+                    };
+                    return codes[direction] || 0;
+                }
+                
+                showTouchIndicator(x, y) {
+                    if (!this.touchIndicator) return;
+                    
+                    const rect = this.canvas.getBoundingClientRect();
+                    const visualX = (x / 800) * rect.width + rect.left;
+                    const visualY = (y / 600) * rect.height + rect.top;
+                    
+                    this.touchIndicator.style.left = (visualX - 30) + 'px';
+                    this.touchIndicator.style.top = (visualY - 30) + 'px';
+                    this.touchIndicator.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        if (this.touchIndicator) {
+                            this.touchIndicator.style.display = 'none';
+                        }
+                    }, 500);
+                }
+            }
+            
+            // Criar controller
+            window.touchController = new TouchController();
+        }
+
+        function toggleSound() {
+            if (window.game && window.game.audioManager) {
+                const newState = !window.game.gameState.soundEnabled;
+                window.game.gameState.soundEnabled = newState;
+                window.game.audioManager.soundEnabled = newState;
+                
+                const soundBtn = document.getElementById('soundToggle');
+                if (soundBtn) {
+                    soundBtn.textContent = newState ? '🔊' : '🔇';
+                }
+                
+                addDebugMessage(`🔊 Som: ${newState ? 'ON' : 'OFF'}`);
+            }
+        }
+
+        // Inicializar quando DOM estiver pronto
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadAllScripts);
+        } else {
+            loadAllScripts();
+        }
+
+        // Setup dos botões
+        document.addEventListener('DOMContentLoaded', function() {
+            const soundBtn = document.getElementById('soundToggle');
+            if (soundBtn) {
+                soundBtn.addEventListener('click', toggleSound);
+                soundBtn.addEventListener('touchstart', (e) => e.stopPropagation());
+            }
+        });
+
+        // Prevenir comportamentos móveis indesejados
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Prevenir zoom duplo toque
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // Log de erros
+        window.addEventListener('error', function(e) {
+            addDebugMessage('💥 Erro: ' + e.message);
+            console.error('Erro detectado:', e.error, e.filename, e.lineno);
+        });
+
+        addDebugMessage('📱 Sistema carregando...');
+    </script>
+</body>
+</html>
