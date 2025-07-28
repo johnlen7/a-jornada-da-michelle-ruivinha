@@ -220,10 +220,23 @@
             cursor: pointer;
             text-align: center;
             font-family: 'Pixelify Sans', cursive;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .d-pad-btn:hover {
             background: rgba(255, 255, 255, 0.2);
+        }
+
+        .d-pad-btn:active,
+        .d-pad-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
         }
 
         .interact-btn {
@@ -234,10 +247,42 @@
             cursor: pointer;
             text-align: center;
             font-family: 'Pixelify Sans', cursive;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .interact-btn:hover {
             background: rgba(255, 255, 255, 0.2);
+        }
+
+        .interact-btn:active,
+        .interact-btn.active {
+            background: rgba(255, 215, 0, 0.4);
+            border-color: rgba(255, 215, 0, 0.6);
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .interact-center {
+            background: rgba(255, 215, 0, 0.2) !important;
+            border: 2px solid rgba(255, 215, 0, 0.3) !important;
+            color: #FFD700 !important;
+            font-weight: bold;
+        }
+
+        .interact-center:hover {
+            background: rgba(255, 215, 0, 0.3) !important;
+        }
+
+        .interact-center:active,
+        .interact-center.active {
+            background: rgba(255, 215, 0, 0.5) !important;
+            border-color: rgba(255, 215, 0, 0.8) !important;
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important;
         }
 
         /* Estilos adicionais conforme necessário */
@@ -267,13 +312,12 @@
                     <div class="d-pad-btn" data-direction="up">↑</div>
                     <div></div>
                     <div class="d-pad-btn" data-direction="left">←</div>
-                    <div class="d-pad-btn"></div>
+                    <div class="d-pad-btn interact-center" id="interactBtn">⚡<br><small>Ação</small></div>
                     <div class="d-pad-btn" data-direction="right">→</div>
                     <div></div>
                     <div class="d-pad-btn" data-direction="down">↓</div>
                     <div></div>
                 </div>
-                <div class="interact-btn" id="interactBtn">ESPAÇO<br><small>Interagir</small></div>
             </div>
             <button class="start-button" id="startButton">Iniciar Jogo</button>
         </div>
@@ -314,22 +358,44 @@
                 document.dispatchEvent(new KeyboardEvent('keyup', {key: key, keyCode, which: keyCode, bubbles: true}));
             }, 100);
         }
-        // Botões visuais
+        // Botões visuais com feedback visual aprimorado
         document.addEventListener('DOMContentLoaded', function() {
             if (isMobile()) {
                 document.querySelectorAll('.d-pad-btn[data-direction]').forEach(btn => {
                     btn.addEventListener('touchstart', function(e) {
                         e.preventDefault();
+                        // Adicionar classe active para feedback visual
+                        btn.classList.add('active');
                         simulateKey(btn.dataset.direction);
                     });
+                    
+                    btn.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        // Remover classe active após pequeno delay
+                        setTimeout(() => {
+                            btn.classList.remove('active');
+                        }, 150);
+                    });
                 });
+                
                 const interactBtn = document.getElementById('interactBtn');
                 if (interactBtn) {
                     interactBtn.addEventListener('touchstart', function(e) {
                         e.preventDefault();
+                        // Adicionar classe active para feedback visual
+                        interactBtn.classList.add('active');
                         simulateKey('space');
                     });
+                    
+                    interactBtn.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        // Remover classe active após pequeno delay
+                        setTimeout(() => {
+                            interactBtn.classList.remove('active');
+                        }, 150);
+                    });
                 }
+                
                 // Tap no canvas para interagir
                 const gameCanvas = document.getElementById('gameCanvas');
                 if (gameCanvas) {
