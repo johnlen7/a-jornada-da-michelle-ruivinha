@@ -298,6 +298,14 @@
         @media screen and (orientation: landscape) and (max-height: 500px) {
             body {
                 padding: 2px;
+                flex-direction: row;
+                align-items: stretch;
+            }
+            
+            #gameContainer {
+                flex: 1;
+                max-width: calc(100vw - 120px); /* Deixa espaço para controles */
+                margin-right: 10px;
             }
             
             #gameCanvas {
@@ -306,18 +314,32 @@
             }
             
             .mobile-controls {
-                bottom: 5px;
-                padding: 4px;
+                position: fixed;
+                right: 10px;
+                top: 50%;
+                bottom: auto;
+                left: auto;
+                transform: translateY(-50%);
+                width: 100px;
+                background: rgba(0, 0, 0, 0.4);
+                border-radius: 10px;
+                padding: 8px;
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            
+            .d-pad {
+                gap: 3px;
             }
             
             .d-pad-btn {
-                padding: 6px;
-                font-size: 12px;
+                padding: 8px;
+                font-size: 14px;
             }
             
             .sound-toggle {
                 top: 5px;
-                right: 5px;
+                right: 130px; /* Ajustar para não sobrepor controles */
                 padding: 6px;
                 font-size: 12px;
             }
@@ -328,7 +350,7 @@
             }
             
             .interaction-hint {
-                bottom: 75px;
+                bottom: 10px;
                 font-size: 12px;
             }
         }
@@ -400,12 +422,18 @@
                 
                 if (canvas && gameContainer) {
                     if (window.innerHeight < window.innerWidth) {
-                        // Landscape - usar altura quase completa
+                        // Landscape - usar altura quase completa e largura ajustada para controles laterais
                         const availableHeight = window.innerHeight - 30; // Margem mínima
                         canvas.style.maxHeight = `${availableHeight}px`;
+                        
+                        // Ajustar largura para dar espaço aos controles laterais
+                        if (window.innerHeight <= 500) {
+                            gameContainer.style.maxWidth = 'calc(100vw - 120px)';
+                        }
                     } else {
-                        // Portrait - usar altura padrão
+                        // Portrait - usar altura padrão e largura normal
                         canvas.style.maxHeight = 'calc(100vh - 20px)';
+                        gameContainer.style.maxWidth = '100vw';
                     }
                 }
             }
