@@ -269,7 +269,13 @@
             if (this.gameState.currentScreen === 'map') {
                 this.checkMapInteraction();
             } else {
+                const previousSpace = this.keys.Space;
+                const previousEnter = this.keys.Enter;
+                this.keys.Space = true;
+                this.keys.Enter = true;
                 this.checkLevelInteraction();
+                this.keys.Space = previousSpace;
+                this.keys.Enter = previousEnter;
             }
         };
 
