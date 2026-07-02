@@ -2,174 +2,293 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Jornada de Michelle - Desktop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>A Jornada de Michelle</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
-        
+
+        html,
         body {
-            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            width: 100%;
+            min-height: 100%;
+            overflow: hidden;
+            background: #101428;
+        }
+
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 10px;
             color: white;
             font-family: 'Pixelify Sans', cursive;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 10px;
-            box-sizing: border-box;
+            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            touch-action: none;
         }
-        
+
         #gameContainer {
             position: relative;
+            width: min(100vw - 20px, 800px);
+            max-height: calc(100dvh - 20px);
+            aspect-ratio: 4 / 3;
             border: 4px solid gold;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            border-radius: 12px;
             background: #000;
-            max-width: 100vw;
-            max-height: 100vh;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            overflow: hidden;
         }
-        
+
         #gameCanvas {
             display: block;
-            image-rendering: pixelated;
-            image-rendering: -moz-crisp-edges;
-            image-rendering: crisp-edges;
-            width: 100%;
-            height: auto;
-            max-width: 800px;
-            max-height: 600px;
-        }
-        
-        #ui {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            background: #000;
+        }
+
+        #ui {
+            position: absolute;
+            inset: 0;
             pointer-events: none;
             z-index: 10;
         }
-        
-        .dialog {
+
+        .hud-panel {
             position: absolute;
-            bottom: 20px;
+            background: rgba(0, 0, 0, 0.72);
+            border: 2px solid rgba(255, 215, 0, 0.85);
+            border-radius: 10px;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .controls {
+            top: 10px;
+            left: 10px;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .level-indicator {
+            top: 10px;
+            right: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            max-width: 45%;
+            text-align: center;
+        }
+
+        .sound-toggle {
+            position: absolute;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            border: 3px solid #ffd700;
-            border-radius: 10px;
-            padding: 20px;
-            max-width: 500px;
-            text-align: center;
-            pointer-events: auto;
-            display: none;
-        }
-        
-        .dialog h3 {
-            color: #ffd700;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-        
-        .dialog p {
-            margin-bottom: 15px;
-            line-height: 1.4;
-        }
-        
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .option-btn {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            border: none;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
+            padding: 10px 15px;
             cursor: pointer;
             font-family: 'Pixelify Sans', cursive;
             font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
+            pointer-events: auto;
+            transition: transform 0.2s ease, background 0.2s ease;
         }
-        
-        .option-btn:hover {
-            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
-            transform: scale(1.05);
+
+        .sound-toggle:hover,
+        .sound-toggle:focus-visible {
+            background: rgba(255, 215, 0, 0.2);
+            transform: translateX(-50%) scale(1.04);
+            outline: none;
         }
-        
+
+        .sound-toggle.muted {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+
+        .start-button {
+            position: absolute;
+            left: 50%;
+            bottom: 74px;
+            transform: translateX(-50%);
+            padding: 14px 24px;
+            border: 3px solid #ffd700;
+            border-radius: 999px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 18px;
+            cursor: pointer;
+            pointer-events: auto;
+            z-index: 25;
+            box-shadow: 0 0 18px rgba(255, 215, 0, 0.35);
+            animation: buttonPulse 1.4s ease-in-out infinite alternate;
+        }
+
+        .start-button.is-hidden {
+            display: none;
+        }
+
+        @keyframes buttonPulse {
+            from { transform: translateX(-50%) scale(1); }
+            to { transform: translateX(-50%) scale(1.05); }
+        }
+
+        .interaction-hint {
+            position: absolute;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%);
+            padding: 10px 15px;
+            display: none;
+            font-size: 14px;
+            animation: hintPulse 1.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes hintPulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+
+        .dialog {
+            position: absolute;
+            left: 50%;
+            bottom: 20px;
+            transform: translateX(-50%);
+            width: min(92%, 540px);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.92);
+            border: 3px solid #ffd700;
+            border-radius: 14px;
+            text-align: center;
+            display: none;
+            pointer-events: auto;
+            z-index: 30;
+        }
+
+        .dialog h3 {
+            color: #ffd700;
+            margin-bottom: 12px;
+            font-size: 20px;
+        }
+
+        .dialog p {
+            margin-bottom: 14px;
+            line-height: 1.45;
+        }
+
+        .options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 12px 16px;
+            border: 0;
+            border-radius: 10px;
+            color: white;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            font-family: 'Pixelify Sans', cursive;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .option-btn:hover,
+        .option-btn:focus-visible {
+            transform: scale(1.03);
+            filter: brightness(1.1);
+            outline: none;
+        }
+
         .option-btn.correct {
             background: linear-gradient(45deg, #00d2d3, #54a0ff);
         }
-        
+
         .option-btn.wrong {
             background: linear-gradient(45deg, #ff3838, #ff6b6b);
         }
-        
-        .controls {
+
+        .mobile-controls {
             position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-        }
-        
-        .level-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 14px;
-            color: #ffd700;
-        }
-        
-        .interaction-hint {
-            position: absolute;
-            top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: #ffd700;
-            padding: 10px 15px;
-            border-radius: 5px;
+            bottom: 8px;
+            transform: translateX(-50%);
             display: none;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
-        }
-        
-        .fireworks {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
+            align-items: center;
+            gap: 14px;
+            pointer-events: auto;
             z-index: 20;
         }
-        
+
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 44px);
+            grid-template-rows: repeat(3, 44px);
+            gap: 4px;
+            padding: 8px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(6px);
+        }
+
+        .d-pad-btn,
+        .interact-btn {
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #333, #666);
+            color: #ffd700;
+            font-family: 'Pixelify Sans', cursive;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .d-pad-btn {
+            width: 44px;
+            height: 44px;
+            font-size: 18px;
+        }
+
+        .d-pad-spacer {
+            width: 44px;
+            height: 44px;
+        }
+
+        .interact-btn {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            color: white;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        .d-pad-btn.active,
+        .interact-btn.active,
+        .d-pad-btn:active,
+        .interact-btn:active {
+            transform: scale(0.94);
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+            color: #1a1a2e;
+        }
+
+        .fireworks {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 35;
+        }
+
         .firework {
             position: absolute;
             width: 4px;
@@ -177,503 +296,189 @@
             border-radius: 50%;
             animation: firework 2s ease-out forwards;
         }
-        
+
         @keyframes firework {
-            0% {
-                opacity: 1;
-                transform: scale(0);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(2);
-            }
+            0% { opacity: 1; transform: scale(0); }
+            50% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(2); }
         }
-        
+
         .final-message {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            border: 4px solid #ffd700;
-            border-radius: 15px;
-            padding: 40px;
+            width: min(92%, 600px);
+            padding: 36px;
             text-align: center;
             display: none;
-            z-index: 30;
-            max-width: 600px;
+            z-index: 40;
+            background: rgba(0, 0, 0, 0.96);
+            border: 4px solid #ffd700;
+            border-radius: 16px;
         }
-        
+
         .final-message h2 {
             color: #ffd700;
             font-size: 28px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 18px;
         }
-        
+
         .final-message p {
+            color: #ff69b4;
             font-size: 18px;
             line-height: 1.5;
-            color: #ff69b4;
         }
-        
-        /* Botão de Som */
-        .sound-toggle {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #ffd700;
-            border-radius: 50px;
-            color: #ffd700;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-family: 'Pixelify Sans', cursive;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            pointer-events: auto;
-            z-index: 100;
-        }
-        
-        .sound-toggle:hover {
-            background: rgba(255, 215, 0, 0.2);
-            transform: translateX(-50%) scale(1.05);
-        }
-        
-        .sound-toggle.muted {
-            background: rgba(255, 0, 0, 0.8);
-            border-color: #ff4444;
-            color: #ff4444;
-        }
-        
-        /* Controles Móveis */
-        .mobile-controls {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: none;
-            gap: 15px;
-            pointer-events: auto;
-            z-index: 50;
-        }
-        
-        .d-pad {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1fr;
-            gap: 2px;
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 15px;
-            padding: 10px;
-        }
-        
-        .d-pad-btn {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(45deg, #333, #666);
-            border: 2px solid #ffd700;
-            border-radius: 8px;
-            color: #ffd700;
-            font-size: 20px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-        }
-        
-        .d-pad-btn:active {
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            color: #000;
-            transform: scale(0.95);
-        }
-        
-        .d-pad-btn:nth-child(5) { /* CENTER - vazio */ 
-            background: transparent;
-            border: none;
-            cursor: default;
-        }
-        
-        .interact-btn {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            border: 3px solid #ffd700;
-            border-radius: 50%;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-        
-        .interact-btn:active {
-            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
-            transform: scale(0.95);
-        }
-        
-        /* Responsividade */
-        @media (max-width: 768px) {
+
+        @media (pointer: coarse), (max-width: 768px) {
             body {
-                padding: 5px;
+                padding: 4px;
             }
-            
+
             #gameContainer {
+                width: min(100vw - 8px, calc((100dvh - 8px) * 4 / 3));
+                max-height: calc(100dvh - 8px);
                 border-width: 2px;
-                width: 100%;
-                max-width: 100vw;
             }
-            
-            .mobile-controls {
-                display: flex;
-                bottom: 5px;
-            }
-            
+
             .controls {
                 display: none;
             }
-            
+
             .level-indicator {
-                font-size: 12px;
-                padding: 8px;
-                top: 50px;
+                top: 48px;
+                right: 6px;
+                max-width: 52%;
+                padding: 7px 9px;
+                font-size: 11px;
             }
-            
+
             .sound-toggle {
-                top: 5px;
-                padding: 8px 12px;
+                top: 6px;
+                padding: 7px 10px;
+                font-size: 11px;
+            }
+
+            .start-button {
+                bottom: 126px;
+                font-size: 15px;
+                padding: 12px 18px;
+            }
+
+            .mobile-controls {
+                display: flex;
+            }
+
+            .interaction-hint {
+                bottom: 106px;
                 font-size: 12px;
+                padding: 8px 10px;
             }
-        }
-        
-        @media (max-width: 480px) {
-            .d-pad-btn {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-            
-            .interact-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 10px;
-            }
-            
+
             .dialog {
-                max-width: 90%;
-                padding: 15px;
-                bottom: 10px;
+                bottom: 112px;
+                padding: 14px;
             }
-            
+
             .dialog h3 {
                 font-size: 16px;
             }
-            
-            .dialog p {
-                font-size: 14px;
-            }
-            
+
+            .dialog p,
             .option-btn {
-                padding: 10px 15px;
                 font-size: 12px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 460px) {
+            .mobile-controls {
+                right: 8px;
+                left: auto;
+                bottom: 8px;
+                transform: none;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .d-pad {
+                grid-template-columns: repeat(3, 38px);
+                grid-template-rows: repeat(3, 38px);
+            }
+
+            .d-pad-btn,
+            .d-pad-spacer {
+                width: 38px;
+                height: 38px;
+            }
+
+            .interact-btn {
+                width: 64px;
+                height: 64px;
+                font-size: 10px;
+            }
+
+            .dialog {
+                bottom: 12px;
+                width: min(78%, 520px);
             }
         }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
+    <main id="gameContainer" aria-label="A Jornada de Michelle">
         <canvas id="gameCanvas" width="800" height="600"></canvas>
-        
-        <div id="ui" style="display: none;">
-            <div class="sound-toggle" id="soundToggle">🔊 SOM</div>
-            
-            <div class="controls">
-                <div>Use ↑↓←→ para mover</div>
-                <div>ESPAÇO para interagir</div>
+
+        <section id="ui" aria-live="polite" style="display: none;">
+            <button class="sound-toggle hud-panel" id="soundToggle" type="button">🔊 SOM</button>
+
+            <div class="controls hud-panel">
+                <div>Use ↑↓←→ ou WASD para mover</div>
+                <div>ESPAÇO/ENTER para interagir</div>
             </div>
-            
-            <div class="level-indicator" id="levelIndicator">
-                Vila Mágica do Amor ❤️
-            </div>
-            
-            <div class="interaction-hint" id="interactionHint">
-                Pressione ESPAÇO para interagir
-            </div>
-            
-            <div class="dialog" id="questionDialog">
+
+            <div class="level-indicator hud-panel" id="levelIndicator">Vila Mágica do Amor ❤️</div>
+
+            <button class="start-button" id="startGameBtn" type="button">✨ Iniciar Jornada ✨</button>
+
+            <div class="interaction-hint hud-panel" id="interactionHint">Pressione ESPAÇO para interagir</div>
+
+            <div class="dialog" id="questionDialog" role="dialog" aria-modal="true">
                 <h3 id="questionTitle">Pergunta</h3>
                 <p id="questionText"></p>
                 <div class="options" id="questionOptions"></div>
                 <p id="questionResult"></p>
             </div>
-            
+
             <div class="final-message" id="finalMessage">
                 <h2>💖 Parabéns! 💖</h2>
                 <p>Não é fim de jogo...<br>é o começo de uma nova jornada ❤️</p>
             </div>
-            
-            <div class="mobile-controls" id="mobileControls">
-                <div class="d-pad">
-                    <div></div>
-                    <div class="d-pad-btn" data-direction="up">↑</div>
-                    <div></div>
-                    <div class="d-pad-btn" data-direction="left">←</div>
-                    <div class="d-pad-btn"></div>
-                    <div class="d-pad-btn" data-direction="right">→</div>
-                    <div></div>
-                    <div class="d-pad-btn" data-direction="down">↓</div>
-                    <div></div>
-                </div>
-                <div class="interact-btn" id="interactBtn">
-                    ESPAÇO<br>
-                    <small>Interagir</small>
-                </div>
-            </div>
-        </div>
-        
-        <div class="fireworks" id="fireworks"></div>
-    </div>
 
+            <div class="mobile-controls" id="mobileControls" aria-label="Controles móveis">
+                <div class="d-pad">
+                    <div class="d-pad-spacer"></div>
+                    <button class="d-pad-btn" type="button" data-direction="up" aria-label="Mover para cima">↑</button>
+                    <div class="d-pad-spacer"></div>
+                    <button class="d-pad-btn" type="button" data-direction="left" aria-label="Mover para esquerda">←</button>
+                    <div class="d-pad-spacer"></div>
+                    <button class="d-pad-btn" type="button" data-direction="right" aria-label="Mover para direita">→</button>
+                    <div class="d-pad-spacer"></div>
+                    <button class="d-pad-btn" type="button" data-direction="down" aria-label="Mover para baixo">↓</button>
+                    <div class="d-pad-spacer"></div>
+                </div>
+                <button class="interact-btn" id="interactBtn" type="button">AÇÃO<br><small>Interagir</small></button>
+            </div>
+        </section>
+
+        <div class="fireworks" id="fireworks"></div>
+    </main>
+
+    <script src="src/data/gameData.js"></script>
     <script src="src/audio.js"></script>
     <script src="src/loading.js"></script>
     <script src="src/game.js"></script>
     <script src="src/scenes.js"></script>
-    <script>
-        window.game = new GameManager();
-
-        // Carregar imagens das casas do mapa
-        const mapHouseImages = {
-            hogwarts: new Image(),
-            centralperk: new Image(),
-            caminhoforte: new Image(),
-            fortecopacabana: new Image()
-        };
-        mapHouseImages.hogwarts.src = 'casa_hogwarts.png';
-        mapHouseImages.centralperk.src = 'centralperk.png';
-        mapHouseImages.caminhoforte.src = 'caminho_forte.png';
-        mapHouseImages.fortecopacabana.src = 'forte_copacabana.png';
-
-        window.addEventListener('DOMContentLoaded', function() {
-            if (window.game && window.game.mapLocations) {
-                window.game.mapLocations = [
-                    { name: "Quarto Hogwarts", x: 150, y: 200, unlocked: true, color: "#8B4513", houseColor: "#654321" },
-                    { name: "Central Perk", x: 650, y: 200, unlocked: false, color: "#FF8C00", houseColor: "#CD853F" },
-                    { name: "Caminho Forte", x: 400, y: 100, unlocked: false, color: "#4682B4", houseColor: "#5F9EA0" },
-                    { name: "Forte Copacabana", x: 400, y: 450, unlocked: false, color: "#DAA520", houseColor: "#B8860B", isFort: true }
-                ];
-            }
-
-            if (window.SceneRenderer && window.SceneRenderer.prototype) {
-                window.SceneRenderer.prototype.drawMap = function(playerX, playerY, mapLocations) {
-                    const ctx = this.ctx;
-                    const canvas = this.canvas;
-                    // Fundo verde
-                    ctx.fillStyle = '#228B22';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    // Caminhos da vila
-                    ctx.fillStyle = '#8B4513';
-                    ctx.fillRect(0, 290, canvas.width, 20); // caminho horizontal
-                    ctx.fillRect(390, 0, 20, canvas.height); // caminho vertical
-                    // Casas e forte
-                    mapLocations.forEach((location, index) => {
-                        this.drawMapLocation(location, index);
-                    });
-                    // Tesouro brilhando (opcional, se quiser implementar)
-                    if (this.updateTreasureGlow) this.updateTreasureGlow();
-                    // Jogador
-                    this.drawPlayer(playerX, playerY);
-                };
-                // Novo método para desenhar casas e forte usando imagens
-                window.SceneRenderer.prototype.drawMapLocation = function(location, index) {
-                    const ctx = this.ctx;
-                    const x = location.x;
-                    const y = location.y;
-                    // Selecionar imagem conforme o índice
-                    let img = null;
-                    if (index === 0) img = mapHouseImages.hogwarts;
-                    if (index === 1) img = mapHouseImages.centralperk;
-                    if (index === 2) img = mapHouseImages.caminhoforte;
-                    if (index === 3) img = mapHouseImages.fortecopacabana;
-                    // Desenhar imagem se carregada
-                    if (img && img.complete && img.naturalWidth) {
-                        let w = 70, h = 70;
-                        if (index === 3) { w = 90; h = 90; } // Forte maior
-                        ctx.save();
-                        ctx.globalAlpha = location.unlocked ? 1 : 0.5;
-                        ctx.drawImage(img, x - w/2, y - h/2, w, h);
-                        ctx.restore();
-                    } else {
-                        // Fallback: desenho antigo
-                        if (location.isFort) {
-                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
-                            ctx.fillRect(x-60, y-40, 120, 80);
-                            ctx.fillRect(x-50, y-30, 100, 60);
-                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
-                            ctx.fillRect(x-70, y-50, 20, 30);
-                            ctx.fillRect(x+50, y-50, 20, 30);
-                        } else {
-                            ctx.fillStyle = location.unlocked ? location.houseColor : '#404040';
-                            ctx.fillRect(x-30, y-20, 60, 40);
-                            ctx.fillStyle = location.unlocked ? '#8B0000' : '#2F2F2F';
-                            ctx.beginPath();
-                            ctx.moveTo(x-35, y-20);
-                            ctx.lineTo(x, y-50);
-                            ctx.lineTo(x+35, y-20);
-                            ctx.closePath();
-                            ctx.fill();
-                            ctx.fillStyle = location.unlocked ? '#654321' : '#1F1F1F';
-                            ctx.fillRect(x-8, y-5, 16, 25);
-                            ctx.fillStyle = location.unlocked ? '#87CEEB' : '#2F2F2F';
-                            ctx.fillRect(x-20, y-15, 8, 8);
-                            ctx.fillRect(x+12, y-15, 8, 8);
-                        }
-                    }
-                    // Nome da localização
-                    ctx.fillStyle = location.unlocked ? '#FFFFFF' : '#808080';
-                    ctx.font = '12px Pixelify Sans';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(location.name, x, y+40);
-                    // Cadeado se bloqueado
-                    if (!location.unlocked) {
-                        ctx.fillStyle = '#FF0000';
-                        ctx.font = '20px Arial';
-                        ctx.fillText('🔒', x, y-60);
-                    }
-                };
-
-                window.SceneRenderer.prototype.drawThemedHouse = function(location, index) {
-                    const ctx = this.ctx;
-                    const x = location.x;
-                    const y = location.y;
-                    const unlocked = location.unlocked;
-                    
-                    switch(index) {
-                        case 0: // Casa de Hogwarts - Estilo castelo mágico
-                            ctx.fillStyle = unlocked ? '#4B0082' : '#2F2F2F';
-                            ctx.fillRect(x-40, y-30, 80, 60);
-                            
-                            ctx.fillRect(x-50, y-50, 20, 80);
-                            ctx.fillRect(x+30, y-50, 20, 80);
-                            
-                            ctx.fillRect(x-15, y-60, 30, 90);
-                            
-                            ctx.fillStyle = unlocked ? '#8B0000' : '#1F1F1F';
-                            ctx.beginPath();
-                            ctx.moveTo(x-50, y-50);
-                            ctx.lineTo(x-40, y-70);
-                            ctx.lineTo(x-30, y-50);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            ctx.beginPath();
-                            ctx.moveTo(x+30, y-50);
-                            ctx.lineTo(x+40, y-70);
-                            ctx.lineTo(x+50, y-50);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            ctx.beginPath();
-                            ctx.moveTo(x-15, y-60);
-                            ctx.lineTo(x, y-80);
-                            ctx.lineTo(x+15, y-60);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
-                            ctx.fillRect(x-35, y-30, 8, 12);
-                            ctx.fillRect(x+27, y-30, 8, 12);
-                            ctx.fillRect(x-6, y-45, 12, 15);
-                            
-                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
-                            ctx.fillRect(x-8, y, 16, 30);
-                            break;
-                            
-                        case 1: // Central Perk - Estilo café aconchegante
-                            ctx.fillStyle = unlocked ? '#CD853F' : '#2F2F2F';
-                            ctx.fillRect(x-40, y-30, 80, 60);
-                            
-                            ctx.fillStyle = unlocked ? '#8B4513' : '#1F1F1F';
-                            ctx.beginPath();
-                            ctx.moveTo(x-45, y-30);
-                            ctx.lineTo(x, y-50);
-                            ctx.lineTo(x+45, y-30);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
-                            ctx.fillRect(x-30, y-20, 15, 20);
-                            ctx.fillRect(x+15, y-20, 15, 20);
-                            
-                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
-                            ctx.fillRect(x-10, y, 20, 30);
-                            break;
-                            
-                        case 2: // Caminho para o Forte - Cabana de aventureiro
-                            ctx.fillStyle = unlocked ? '#8B4513' : '#2F2F2F';
-                            ctx.fillRect(x-30, y-20, 60, 40);
-                            
-                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
-                            ctx.beginPath();
-                            ctx.moveTo(x-35, y-20);
-                            ctx.lineTo(x, y-45);
-                            ctx.lineTo(x+35, y-20);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            ctx.fillStyle = unlocked ? '#696969' : '#2F2F2F';
-                            ctx.fillRect(x+15, y-40, 8, 25);
-                            
-                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
-                            ctx.beginPath();
-                            ctx.arc(x-15, y-10, 8, 0, Math.PI * 2);
-                            ctx.fill();
-                            
-                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
-                            ctx.beginPath();
-                            ctx.arc(x+10, y+10, 12, 0, Math.PI);
-                            ctx.fill();
-                            break;
-                            
-                        case 3: // Forte Copacabana - Torre majestosa
-                            ctx.fillStyle = unlocked ? '#696969' : '#2F2F2F';
-                            ctx.fillRect(x-25, y-40, 50, 70);
-                            
-                            ctx.fillRect(x-20, y-60, 40, 20);
-                            
-                            ctx.fillStyle = unlocked ? '#B8860B' : '#1F1F1F';
-                            ctx.beginPath();
-                            ctx.moveTo(x-25, y-60);
-                            ctx.lineTo(x, y-80);
-                            ctx.lineTo(x+25, y-60);
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            ctx.fillStyle = unlocked ? '#FFD700' : '#404040';
-                            ctx.fillRect(x-15, y-35, 8, 12);
-                            ctx.fillRect(x+7, y-35, 8, 12);
-                            ctx.fillRect(x-15, y-15, 8, 12);
-                            ctx.fillRect(x+7, y-15, 8, 12);
-                            
-                            ctx.fillStyle = unlocked ? '#654321' : '#1F1F1F';
-                            ctx.fillRect(x-10, y+15, 20, 15);
-                            break;
-                    }
-                };
-            }
-        });
-    </script>
+    <script src="src/stabilize.js"></script>
+    <script src="src/main.js"></script>
 </body>
 </html>

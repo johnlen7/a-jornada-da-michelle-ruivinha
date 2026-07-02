@@ -3,471 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Jornada de Michelle - Seletor de Plataforma</title>
+    <title>A Jornada de Michelle</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
-            background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
             color: white;
             font-family: 'Pixelify Sans', cursive;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background: radial-gradient(circle at top, #2d1b69 0%, #16213e 42%, #0f1020 100%);
             overflow: hidden;
         }
-        
-        .container {
-            text-align: center;
-            padding: 40px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 4px solid gold;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-            max-width: 600px;
-            width: 90%;
-        }
-        
-        .login-container {
-            text-align: center;
-            padding: 40px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 4px solid #ff6b6b;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
-            max-width: 500px;
-            width: 90%;
-            animation: pulse-border 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes pulse-border {
-            from { 
-                border-color: #ff6b6b;
-                box-shadow: 0 0 30px rgba(255, 107, 107, 0.5);
-            }
-            to { 
-                border-color: #ee5a24;
-                box-shadow: 0 0 40px rgba(238, 90, 36, 0.7);
-            }
-        }
-        
-        .login-subtitle {
-            font-size: 1.1em;
-            margin-bottom: 30px;
-            color: #ccc;
-        }
-        
-        .login-form {
-            margin-bottom: 30px;
-        }
-        
-        #passwordInput {
-            width: 100%;
-            max-width: 300px;
-            padding: 15px 20px;
-            font-size: 1.2em;
-            font-family: 'Pixelify Sans', cursive;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid #666;
-            border-radius: 10px;
-            color: white;
-            text-align: center;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-        
-        #passwordInput:focus {
-            outline: none;
-            border-color: #FFD700;
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-        }
-        
-        #passwordInput::placeholder {
-            color: #888;
-        }
-        
-        .login-button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            border: 3px solid #ff6b6b;
-            border-radius: 10px;
-            color: white;
-            padding: 15px 30px;
-            font-size: 1.3em;
-            font-family: 'Pixelify Sans', cursive;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 0 auto;
-        }
-        
-        .login-button:hover {
-            background: linear-gradient(45deg, #ee5a24, #c44222);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-        }
-        
-        .login-button:active {
-            transform: translateY(0);
-        }
-        
-        .error-message {
-            color: #ff4757;
-            font-size: 1em;
-            margin-top: 15px;
-            font-weight: bold;
-            animation: shake 0.5s ease-in-out;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-        
-        .login-footer {
-            font-size: 0.9em;
-            color: #888;
-        }
-        
-        .logout-btn {
-            background: rgba(255, 107, 107, 0.2);
-            border: 1px solid #ff6b6b;
-            border-radius: 5px;
-            color: #ff6b6b;
-            padding: 8px 15px;
-            font-size: 0.9em;
-            font-family: 'Pixelify Sans', cursive;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: all 0.3s ease;
-        }
-        
-        .logout-btn:hover {
-            background: rgba(255, 107, 107, 0.3);
-            transform: scale(1.05);
-        }
-        
-        h1 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            color: #FFD700;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes glow {
-            from { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px #FFD700; }
-            to { text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px #FFD700, 0 0 30px #FFD700; }
-        }
-        
-        .subtitle {
-            font-size: 1.2em;
-            margin-bottom: 40px;
-            color: #ccc;
-        }
-        
-        .platform-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            align-items: center;
-        }
-        
-        .platform-btn {
-            background: linear-gradient(45deg, #4a4a4a, #2a2a2a);
-            border: 3px solid #FFD700;
-            border-radius: 10px;
-            color: white;
-            padding: 20px 40px;
-            font-size: 1.5em;
-            font-family: 'Pixelify Sans', cursive;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            min-width: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            cursor: pointer;
-        }
-        
-        .platform-btn:hover {
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: #000;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(255, 215, 0, 0.4);
-        }
-        
-        .platform-btn:active {
-            transform: translateY(-2px);
-        }
-        
-        .icon {
-            font-size: 1.2em;
-        }
-        
-        .footer {
-            margin-top: 30px;
-            font-size: 0.9em;
-            color: #888;
-        }
-        
+
         .sparkles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed;
+            inset: 0;
             pointer-events: none;
             overflow: hidden;
         }
-        
-        .sparkle {
+
+        .sparkles::before,
+        .sparkles::after {
+            content: '✨ 💖 ✨ 💫 ⭐ ✨ 💖 ✨';
             position: absolute;
-            background: #FFD700;
-            border-radius: 50%;
-            animation: sparkle 3s linear infinite;
+            left: 50%;
+            width: 100%;
+            color: rgba(255, 215, 0, 0.65);
+            font-size: 28px;
+            letter-spacing: 28px;
+            animation: drift 12s linear infinite;
         }
-        
-        @keyframes sparkle {
-            0% {
-                opacity: 0;
-                transform: translateY(100vh) scale(0);
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-10vh) scale(1);
-            }
+
+        .sparkles::before { top: 110%; }
+        .sparkles::after { top: 140%; animation-delay: -6s; }
+
+        @keyframes drift {
+            from { transform: translate(-50%, 0); opacity: 0; }
+            12% { opacity: 1; }
+            88% { opacity: 1; }
+            to { transform: translate(-50%, -150vh); opacity: 0; }
         }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 2em;
-            }
-            
-            .platform-btn {
-                padding: 15px 30px;
-                font-size: 1.2em;
-                min-width: 200px;
-            }
+
+        .container {
+            position: relative;
+            width: min(94vw, 680px);
+            padding: clamp(28px, 6vw, 48px);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.78);
+            border: 4px solid gold;
+            border-radius: 18px;
+            box-shadow: 0 0 34px rgba(255, 215, 0, 0.45);
+            z-index: 1;
+        }
+
+        h1 {
+            margin-bottom: 18px;
+            color: #ffd700;
+            font-size: clamp(2rem, 7vw, 3.5rem);
+            text-shadow: 0 0 18px rgba(255, 215, 0, 0.7), 3px 3px 0 #000;
+        }
+
+        .subtitle {
+            margin-bottom: 30px;
+            color: #f2d6ff;
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            line-height: 1.5;
+        }
+
+        .play-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            min-width: min(100%, 320px);
+            padding: 18px 28px;
+            border: 3px solid #ffd700;
+            border-radius: 14px;
+            color: #fff;
+            text-decoration: none;
+            font-size: clamp(1.25rem, 4vw, 1.6rem);
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(255, 215, 0, 0.35);
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .play-button:hover,
+        .play-button:focus-visible {
+            transform: translateY(-4px) scale(1.02);
+            filter: brightness(1.08);
+            outline: none;
+        }
+
+        .notes {
+            margin-top: 24px;
+            color: #bfc7ff;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
-    <div class="sparkles" id="sparkles"></div>
-    
-    <!-- Tela de Login -->
-    <div class="login-container" id="loginContainer">
-        <h1>🔐 Acesso Restrito 🔐</h1>
-        <p class="login-subtitle">Digite a senha mágica para acessar a Jornada de Michelle</p>
-        
-        <div class="login-form">
-            <input type="password" id="passwordInput" placeholder="🗝️ Senha Mágica" maxlength="20">
-            <button id="loginBtn" class="login-button">
-                <span class="icon">✨</span>
-                <span>Entrar na Aventura</span>
-            </button>
-            <div id="errorMessage" class="error-message"></div>
-        </div>
-        
-        <div class="login-footer">
-            <p>🌟 Apenas membros autorizados podem acessar 🌟</p>
-        </div>
-    </div>
-    
-    <!-- Tela Principal (inicialmente oculta) -->
-    <div class="container" id="gameContainer" style="display: none;">
-        <h1>🏰 A Jornada de Michelle 🏰</h1>
-        <p class="subtitle">Escolha sua plataforma para começar a aventura!</p>
-        
-        <div class="platform-buttons">            <a href="game_atualizado.html" class="platform-btn">
-                <span class="icon">🖥️</span>
-                <span>Desktop / PC</span>
-            </a>
-            
-            <a href="game_mobile_otimizado.html" class="platform-btn">
-                <span class="icon">📱</span>
-                <span>Mobile / Tablet</span>
-            </a>
-            
-            <a href="game_mobile_final_funcionando.html" class="platform-btn">
-                <span class="icon">🎮</span>
-                <span>Versão Alternativa</span>
-            </a>
-        </div>
-        
-        <div class="footer">
-            <p>✨ Cada versão foi otimizada para sua plataforma ✨</p>
-            <button id="logoutBtn" class="logout-btn">🔓 Sair</button>
-        </div>
-    </div>
+    <div class="sparkles"></div>
 
-    <script>
-        // Configuração da senha (você pode alterar aqui)
-        const CORRECT_PASSWORD = "michelle0809"; // ALTERE ESTA SENHA!
-        
-        // Elementos DOM
-        const loginContainer = document.getElementById('loginContainer');
-        const gameContainer = document.getElementById('gameContainer');
-        const passwordInput = document.getElementById('passwordInput');
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        // Verificar se já está logado (sessionStorage)
-        function checkLoginStatus() {
-            const isLoggedIn = sessionStorage.getItem('michelleGameAccess') === 'granted';
-            if (isLoggedIn) {
-                showGameContainer();
-            }
-        }
-        
-        // Mostrar tela do jogo
-        function showGameContainer() {
-            loginContainer.style.display = 'none';
-            gameContainer.style.display = 'block';
-        }
-        
-        // Mostrar tela de login
-        function showLoginContainer() {
-            loginContainer.style.display = 'block';
-            gameContainer.style.display = 'none';
-            passwordInput.value = '';
-            errorMessage.textContent = '';
-        }
-        
-        // Verificar senha
-        function checkPassword() {
-            const enteredPassword = passwordInput.value.trim();
-            
-            if (enteredPassword === '') {
-                showError('Por favor, digite a senha!');
-                return;
-            }
-            
-            if (enteredPassword === CORRECT_PASSWORD) {
-                // Senha correta
-                sessionStorage.setItem('michelleGameAccess', 'granted');
-                showGameContainer();
-                
-                // Efeito de sucesso
-                loginBtn.style.background = 'linear-gradient(45deg, #2ed573, #1e8449)';
-                loginBtn.innerHTML = '<span class="icon">🎉</span><span>Acesso Liberado!</span>';
-                
-                setTimeout(() => {
-                    loginBtn.style.background = '';
-                    loginBtn.innerHTML = '<span class="icon">✨</span><span>Entrar na Aventura</span>';
-                }, 1000);
-                
-            } else {
-                // Senha incorreta
-                showError('❌ Senha incorreta! Tente novamente.');
-                passwordInput.value = '';
-                passwordInput.focus();
-                
-                // Efeito visual de erro
-                passwordInput.style.borderColor = '#ff4757';
-                setTimeout(() => {
-                    passwordInput.style.borderColor = '';
-                }, 2000);
-            }
-        }
-        
-        // Mostrar mensagem de erro
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.animation = 'none';
-            setTimeout(() => {
-                errorMessage.style.animation = 'shake 0.5s ease-in-out';
-            }, 10);
-        }
-        
-        // Event listeners
-        loginBtn.addEventListener('click', checkPassword);
-        
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkPassword();
-            }
-        });
-        
-        logoutBtn.addEventListener('click', function() {
-            sessionStorage.removeItem('michelleGameAccess');
-            showLoginContainer();
-        });
-        
-        // Focar no input ao carregar
-        passwordInput.addEventListener('focus', function() {
-            errorMessage.textContent = '';
-        });
-        
-        // Criar efeito de estrelas caindo
-        function createSparkle() {
-            const sparkle = document.createElement('div');
-            sparkle.className = 'sparkle';
-            
-            const size = Math.random() * 4 + 2;
-            sparkle.style.width = size + 'px';
-            sparkle.style.height = size + 'px';
-            sparkle.style.left = Math.random() * 100 + '%';
-            sparkle.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            sparkle.style.animationDelay = Math.random() * 2 + 's';
-            
-            document.getElementById('sparkles').appendChild(sparkle);
-            
-            setTimeout(() => {
-                sparkle.remove();
-            }, 5000);
-        }
-        
-        // Criar estrelas periodicamente
-        setInterval(createSparkle, 200);
-        
-        // Detectar dispositivo e mostrar recomendação
-        function detectDevice() {
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isTablet = /iPad|Android(?=.*Tablet)|(?=.*\bTablet\b)/.test(navigator.userAgent);
-            
-            if (isMobile || isTablet) {
-                const subtitle = document.querySelector('#gameContainer .subtitle');
-                if (subtitle) {
-                    subtitle.innerHTML = 
-                        'Dispositivo móvel detectado! 📱<br>Recomendamos a versão Mobile/Tablet';
-                }
-            }
-        }
-        
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
-            detectDevice();
-            
-            // Focar no input após carregar
-            setTimeout(() => {
-                passwordInput.focus();
-            }, 500);
-        });
-    </script>
+    <main class="container">
+        <h1>🏰 A Jornada de Michelle 🏰</h1>
+        <p class="subtitle">
+            Uma aventura mágica em 2D com versão única e responsiva para desktop, tablet e celular.
+        </p>
+
+        <a class="play-button" href="game_atualizado.html">
+            <span>✨</span>
+            <span>Começar a Jornada</span>
+        </a>
+
+        <p class="notes">
+            No computador, use teclado. No celular, use o D-pad e o botão de ação que aparecem na tela.
+        </p>
+    </main>
 </body>
 </html>
