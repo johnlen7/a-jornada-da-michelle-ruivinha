@@ -15,11 +15,6 @@
         }
 
         window.game = new window.GameManager();
-
-        if (window.MichelleGameStabilizer && typeof window.MichelleGameStabilizer.apply === 'function') {
-            window.MichelleGameStabilizer.apply(window.game);
-        }
-
-        console.log('🎮 A Jornada de Michelle inicializada pela entrada única.');
+        console.log('🎮 A Jornada de Michelle inicializada (2 temporadas).');
     });
 })(window, document);

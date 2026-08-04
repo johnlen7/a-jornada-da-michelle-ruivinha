@@ -1,4 +1,6 @@
-// Sistema de Loading Screen com progresso real dos assets principais.
+// Sistema de Loading Screen com progresso real dos assets de áudio.
+// Os gráficos são gerados em código (pixel-art), então não há imagens pesadas
+// para pré-carregar — o loading fica rápido e só garante o áudio pronto.
 class LoadingScreen {
     constructor(ctx, canvas) {
         this.ctx = ctx;
@@ -6,20 +8,11 @@ class LoadingScreen {
         this.loadingProgress = 0;
         this.loadingText = 'Carregando...';
         this.startTime = Date.now();
-        this.minimumDuration = 700;
+        this.minimumDuration = 900;
         this.assetsStarted = false;
         this.assetsLoaded = 0;
         this.assetsTotal = 0;
         this.assetErrors = [];
-        this.michelleSprite = new Image();
-        this.spriteLoaded = false;
-
-        const imageAssets = window.GameData && window.GameData.assets ? window.GameData.assets.images : {};
-        this.michelleSprite.src = imageAssets && imageAssets.michelle ? imageAssets.michelle : 'assets/images/michelle_sprite.png';
-        this.michelleSprite.onload = () => { this.spriteLoaded = true; };
-        this.michelleSprite.onerror = () => {
-            console.warn('Erro ao carregar sprite da Michelle para loading');
-        };
 
         this.preloadAssets();
     }
@@ -29,9 +22,8 @@ class LoadingScreen {
         this.assetsStarted = true;
 
         const data = window.GameData || {};
-        const images = data.assets && data.assets.images ? Object.values(data.assets.images) : [];
         const audio = data.assets && data.assets.audio ? Object.values(data.assets.audio) : [];
-        const uniqueAssets = [...new Set([...images, ...audio].filter(Boolean))];
+        const uniqueAssets = [...new Set(audio.filter(Boolean))];
 
         this.assetsTotal = uniqueAssets.length;
         if (this.assetsTotal === 0) {
@@ -48,26 +40,17 @@ class LoadingScreen {
                 this.assetsLoaded += 1;
             };
 
-            if (/\.(png|jpe?g|gif|webp|svg)$/i.test(src)) {
-                const image = new Image();
-                image.onload = () => done(false);
-                image.onerror = () => done(true);
-                image.src = src;
-            } else if (/\.(mp3|ogg|wav|m4a)$/i.test(src)) {
-                const audioElement = new Audio();
-                audioElement.preload = 'auto';
-                audioElement.oncanplaythrough = () => done(false);
-                audioElement.onerror = () => done(true);
-                audioElement.src = src;
-                audioElement.load();
+            const audioElement = new Audio();
+            audioElement.preload = 'auto';
+            audioElement.oncanplaythrough = () => done(false);
+            audioElement.onerror = () => done(true);
+            audioElement.src = src;
+            audioElement.load();
 
-                // Áudio pode demorar/ser bloqueado em alguns navegadores. Não travar o jogo por isso.
-                setTimeout(() => {
-                    if (audioElement.readyState < 2) done(true);
-                }, 2500);
-            } else {
-                done(false);
-            }
+            // Áudio pode demorar/ser bloqueado em alguns navegadores. Não travar o jogo por isso.
+            setTimeout(() => {
+                if (audioElement.readyState < 2) done(true);
+            }, 2500);
         });
     }
 
@@ -84,7 +67,7 @@ class LoadingScreen {
         } else if (this.loadingProgress < 0.95) {
             this.loadingText = 'Quase pronto...';
         } else {
-            this.loadingText = this.assetErrors.length ? 'Pronto com alguns fallbacks!' : 'Pronto!';
+            this.loadingText = this.assetErrors.length ? 'Pronto com trilha alternativa!' : 'Pronto!';
         }
 
         return assetProgress >= 1 && timeProgress >= 1;
@@ -93,50 +76,64 @@ class LoadingScreen {
     draw() {
         const ctx = this.ctx;
         const canvas = this.canvas;
+        const now = Date.now();
 
         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        gradient.addColorStop(0, '#1a0d4d');
-        gradient.addColorStop(0.5, '#2d1810');
-        gradient.addColorStop(1, '#4a3426');
+        gradient.addColorStop(0, '#241447');
+        gradient.addColorStop(0.5, '#3B1D5A');
+        gradient.addColorStop(1, '#5D2A52');
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        for (let i = 0; i < 30; i++) {
-            const x = (i * 127) % canvas.width;
+        // Estrelas cintilando (posições fixas, sem flicker)
+        for (let i = 0; i < 40; i++) {
+            const x = (i * 173) % canvas.width;
             const y = (i * 97) % canvas.height;
-            const twinkle = Math.sin(Date.now() * 0.005 + i) * 0.5 + 0.5;
-            ctx.fillStyle = `rgba(255, 255, 255, ${twinkle})`;
-            ctx.beginPath();
-            ctx.arc(x, y, 1, 0, Math.PI * 2);
-            ctx.fill();
+            const twinkle = Math.sin(now * 0.004 + i * 1.7) * 0.5 + 0.5;
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.25 + twinkle * 0.6})`;
+            ctx.fillRect(x, y, 2, 2);
         }
 
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 36px Pixelify Sans, Arial';
+        ctx.font = 'bold 36px "Pixelify Sans", Arial';
         ctx.textAlign = 'center';
-        ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#5D2A52';
+        ctx.lineWidth = 3;
         ctx.strokeText('A Jornada de Michelle', canvas.width / 2, 120);
         ctx.fillText('A Jornada de Michelle', canvas.width / 2, 120);
 
-        const michelleX = canvas.width / 2;
-        const michelleY = canvas.height / 2 - 50;
-        const glowIntensity = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
-        ctx.shadowColor = '#FFD700';
-        ctx.shadowBlur = 20 * glowIntensity;
+        // Coração pixel-art pulsando no centro
+        const heart = window.PixelSprites ? window.PixelSprites.object('heart') : null;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2 - 40;
+        const pulse = 1 + Math.sin(now * 0.006) * 0.12;
 
-        if (this.spriteLoaded) {
-            const spriteSize = 80 + Math.sin(Date.now() * 0.003) * 10;
-            ctx.drawImage(this.michelleSprite, michelleX - spriteSize / 2, michelleY - spriteSize / 2, spriteSize, spriteSize);
+        ctx.save();
+        ctx.shadowColor = '#FF5A8A';
+        ctx.shadowBlur = 26 * (Math.sin(now * 0.005) * 0.3 + 0.7);
+        if (heart) {
+            const w = heart.width * 2.4 * pulse;
+            const h = heart.height * 2.4 * pulse;
+            ctx.drawImage(heart, cx - w / 2, cy - h / 2, w, h);
         } else {
-            ctx.fillStyle = `rgba(255, 215, 0, ${glowIntensity})`;
+            ctx.fillStyle = '#FF5A8A';
             ctx.beginPath();
-            ctx.arc(michelleX, michelleY, 30, 0, Math.PI * 2);
+            ctx.arc(cx, cy, 30 * pulse, 0, Math.PI * 2);
             ctx.fill();
         }
+        ctx.restore();
 
-        ctx.shadowBlur = 0;
+        // Alianças decorativas orbitando
+        const ring = window.PixelSprites ? window.PixelSprites.object('ring') : null;
+        if (ring) {
+            const angle = now * 0.0012;
+            const rx = Math.cos(angle) * 110;
+            const ry = Math.sin(angle) * 36;
+            ctx.drawImage(ring, cx + rx - 15, cy + ry - 15, 30, 30);
+            ctx.drawImage(ring, cx - rx - 15, cy - ry - 15, 30, 30);
+        }
 
+        // Barra de progresso
         const barWidth = 300;
         const barHeight = 20;
         const barX = (canvas.width - barWidth) / 2;
@@ -156,22 +153,16 @@ class LoadingScreen {
         ctx.fillRect(barX, barY, progressWidth, barHeight);
 
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '18px Pixelify Sans, Arial';
+        ctx.font = '18px "Pixelify Sans", Arial';
         ctx.fillText(this.loadingText, canvas.width / 2, barY - 20);
 
-        ctx.font = '14px Pixelify Sans, Arial';
+        ctx.font = '14px "Pixelify Sans", Arial';
         ctx.fillText(`${Math.round(this.loadingProgress * 100)}%`, canvas.width / 2, barY + 45);
 
-        ctx.fillStyle = '#FF1493';
-        ctx.font = '30px Arial';
-        const heartBounce = Math.sin(Date.now() * 0.008) * 3;
-        ctx.fillText('💖', canvas.width / 2 - 100, michelleY + heartBounce);
-        ctx.fillText('💖', canvas.width / 2 + 100, michelleY - heartBounce);
-
         if (this.loadingProgress > 0.5) {
-            const pulse = Math.sin(Date.now() * 0.005) * 0.3 + 0.7;
-            ctx.fillStyle = `rgba(255, 255, 255, ${pulse})`;
-            ctx.font = '16px Pixelify Sans, Arial';
+            const alpha = Math.sin(now * 0.005) * 0.3 + 0.7;
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.font = '16px "Pixelify Sans", Arial';
             ctx.fillText('Prepare-se para a aventura do amor! ❤️', canvas.width / 2, canvas.height - 50);
         }
     }

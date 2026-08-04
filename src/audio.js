@@ -141,38 +141,64 @@ class AudioManager {
         }
     }
 
-    playBackgroundMusic(currentScreen, currentLevel) {
+    // Toca a música de uma cena pela sua chave ('s1-map', 'hogwarts', etc).
+    playBackgroundMusic(key) {
         if (!this.soundEnabled) return;
 
         this.stopBackgroundMusic();
 
-        if (currentScreen === 'level') {
-            if (currentLevel === 0) {
-                this.playAudioFile(this.musicFiles.hogwarts).then((played) => {
-                    if (!played) this.playSyntheticMusic([523, 659, 784, 659, 698, 784, 880, 784, 659, 523], 900);
-                });
-                return;
-            }
-
-            if (currentLevel === 1) {
-                this.playAudioFile(this.musicFiles.centralperk).then((played) => {
-                    if (!played) this.playSyntheticMusic([523, 587, 659, 698, 659, 587, 523, 659, 698, 784], 520);
-                });
-                return;
-            }
-
-            if (currentLevel === 2) {
-                this.playSyntheticMusic([440, 523, 659, 784, 698, 659, 523, 587, 659, 440], 620);
-                return;
-            }
-
-            if (currentLevel === 3) {
-                this.playSyntheticMusic([523, 659, 784, 880, 1047, 880, 784, 659, 698, 523], 980);
-                return;
-            }
+        if (key === 'hogwarts') {
+            this.playAudioFile(this.musicFiles.hogwarts).then((played) => {
+                if (!played) this.playSyntheticMusic([523, 659, 784, 659, 698, 784, 880, 784, 659, 523], 900);
+            });
+            return;
         }
 
-        this.playSyntheticMusic([523, 587, 659, 698, 784, 698, 659, 587, 523, 659], 720);
+        if (key === 'centralperk') {
+            this.playAudioFile(this.musicFiles.centralperk).then((played) => {
+                if (!played) this.playSyntheticMusic([523, 587, 659, 698, 659, 587, 523, 659, 698, 784], 520);
+            });
+            return;
+        }
+
+        const melodies = {
+            's1-map': [523, 587, 659, 698, 784, 698, 659, 587, 523, 659],
+            's1-path': [440, 523, 659, 784, 698, 659, 523, 587, 659, 440],
+            's1-fort': [523, 659, 784, 880, 1047, 880, 784, 659, 698, 523],
+            's2-map': [659, 784, 880, 784, 698, 659, 587, 659, 698, 784],
+            's2-hall': [523, 659, 784, 659, 880, 784, 698, 784, 659, 587],
+            's2-atelier': [587, 698, 880, 698, 784, 698, 659, 587, 523, 587],
+            's2-runner': [440, 440, 523, 587, 659, 587, 523, 440, 494, 587],
+            's2-altar': [523, 523, 659, 523, 698, 659, 523, 587, 659, 784],
+            finale: [523, 659, 784, 1047, 880, 784, 880, 1047, 1319, 1047]
+        };
+
+        const tempos = {
+            's1-map': 720, 's1-path': 620, 's1-fort': 980,
+            's2-map': 700, 's2-hall': 640, 's2-atelier': 820,
+            's2-runner': 320, 's2-altar': 900, finale: 760
+        };
+
+        const melody = melodies[key] || melodies['s1-map'];
+        this.playSyntheticMusic(melody, tempos[key] || 700);
+    }
+
+    // Efeitos da fase de obstáculos
+    playCollectSound() {
+        this.createTone(880, 0.1, 'sine', 0.07);
+        setTimeout(() => this.createTone(1319, 0.12, 'sine', 0.06), 60);
+    }
+
+    playHitSound() {
+        this.createTone(140, 0.3, 'sawtooth', 0.1);
+        setTimeout(() => this.createTone(98, 0.25, 'sawtooth', 0.08), 90);
+    }
+
+    playRunnerWinSound() {
+        if (!this.soundEnabled) return;
+        [523, 659, 784, 1047].forEach((note, i) => {
+            setTimeout(() => this.createTone(note, 0.25, 'triangle', 0.09), i * 120);
+        });
     }
 
     playSyntheticMusic(melody, tempo) {
