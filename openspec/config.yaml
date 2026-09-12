@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  Language: pt-BR
+  All artifacts must be written in pt-BR.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+  Projeto: "A Jornada da Michelle Ruivinha" — jogo de aventura 2D em pixel-art,
+  narrativo e afetivo, feito como presente para uma pessoa específica. Duas
+  temporadas: o pedido de casamento e o caminho até o altar.
+
+  Restrições que valem para qualquer mudança proposta:
+  - JavaScript vanilla com scripts globais (`window.X`), sem módulos, sem bundler
+    e sem etapa de build. O jogo tem que continuar abrindo por servidor estático
+    simples, e de preferência por duplo-clique no arquivo.
+  - Toda a arte é pixel-art desenhada em código (`src/sprites.js`, `src/scenes.js`),
+    renderizada uma vez em canvas offscreen com cache. Não reintroduzir PNGs pesados.
+  - O conteúdo editável (perguntas, opções, textos, dificuldade) vive em
+    `src/data/` e é editado por quem não programa, com comentários em português.
+    Nenhuma mudança pode tornar essa edição mais difícil.
+  - O alvo principal é celular. Todo recurso precisa funcionar por toque, sem
+    teclado físico, em retrato e em paisagem.
+  - O progresso é salvo em `localStorage`, por temporada. Não quebrar o progresso
+    de quem já jogou sem tratar a migração explicitamente.
+  - Não há backend e não deve haver: o jogo é inteiramente estático.
+
+  Documentos de referência no repositório:
+  - `docs/AUDITORIA.md` — achados verificados em execução, com evidências.
+  - `docs/PLANO-DE-UPGRADES.md` — ondas, dependências entre changes e metas.
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always include a "Non-goals" section
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

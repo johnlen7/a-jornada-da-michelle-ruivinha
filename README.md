@@ -71,6 +71,25 @@ assets/
 
 > Os arquivos `game_*.html` e `jogo_*.html` antigos são versões legadas mantidas apenas para histórico; a entrada oficial é `game_atualizado.html`.
 
+## 🔍 Auditoria e próximos passos
+
+O projeto passou por uma auditoria técnica e tem um plano de evolução registrado:
+
+- [`docs/AUDITORIA.md`](docs/AUDITORIA.md) — achados verificados com o jogo rodando
+  (desempenho, bugs, acessibilidade e estrutura), com evidências.
+- [`docs/PLANO-DE-UPGRADES.md`](docs/PLANO-DE-UPGRADES.md) — o plano priorizado em ondas,
+  com as dependências entre as frentes e as metas de cada uma.
+
+As frentes de trabalho estão especificadas com [OpenSpec](https://github.com/Fission-AI/OpenSpec)
+em `openspec/changes/`, cada uma com proposta, specs de comportamento, decisões de desenho e
+lista de tarefas:
+
+```bash
+npx @fission-ai/openspec@1 list                    # frentes em aberto
+npx @fission-ai/openspec@1 show <nome-da-change>   # ler uma proposta
+npx @fission-ai/openspec@1 validate --all --strict # conferir as specs
+```
+
 ## 🚀 Como executar
 
 ### Opção simples
