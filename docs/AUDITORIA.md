@@ -4,6 +4,14 @@
 **Revisão:** commit `503969f` (branch `master`)
 **Escopo:** código-fonte (`src/`, `index.html`, `game_atualizado.html`), assets, estrutura do repositório e comportamento em execução.
 
+> ✅ **Status: todos os achados foram corrigidos.** As sete changes do
+> [plano de upgrades](PLANO-DE-UPGRADES.md) que endereçam este relatório foram
+> implementadas, verificadas com testes automatizados reais (Playwright) e
+> arquivadas em `openspec/specs/`, que agora é o contrato de comportamento
+> vigente do jogo. Este documento permanece como registro histórico do estado
+> anterior — os números "hoje" abaixo descrevem o projeto **antes** da
+> implementação. Veja o resultado final na tabela de métricas do plano.
+
 Os achados marcados com **[medido]** foram verificados com o jogo rodando de verdade
 (Chromium headless + servidor local), não apenas por leitura de código.
 

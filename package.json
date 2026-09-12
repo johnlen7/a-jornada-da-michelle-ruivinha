@@ -1,0 +1,24 @@
+{
+  "name": "a-jornada-da-michelle-ruivinha",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jogo interativo em HTML5 Canvas, CSS3 e JavaScript Vanilla — a jornada da Michelle em duas temporadas.",
+  "scripts": {
+    "lint": "eslint src",
+    "test": "playwright test",
+    "test:install": "playwright install --with-deps chromium"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnlen7/a-jornada-da-michelle-ruivinha.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/johnlen7/a-jornada-da-michelle-ruivinha/issues"
+  },
+  "homepage": "https://github.com/johnlen7/a-jornada-da-michelle-ruivinha#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "eslint": "^9.39.5"
+  }
+}

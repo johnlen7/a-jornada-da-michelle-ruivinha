@@ -1,6 +1,8 @@
-// Sistema de Loading Screen com progresso real dos assets de áudio.
+// Sistema de Loading Screen.
 // Os gráficos são gerados em código (pixel-art), então não há imagens pesadas
-// para pré-carregar — o loading fica rápido e só garante o áudio pronto.
+// para pré-carregar, e as trilhas em arquivo são buscadas sob demanda pelo
+// AudioManager quando a cena que as usa começa — não aqui. O progresso desta
+// tela reflete só o tempo mínimo de apresentação, nunca download de mídia.
 class LoadingScreen {
     constructor(ctx, canvas) {
         this.ctx = ctx;
@@ -9,56 +11,11 @@ class LoadingScreen {
         this.loadingText = 'Carregando...';
         this.startTime = Date.now();
         this.minimumDuration = 900;
-        this.assetsStarted = false;
-        this.assetsLoaded = 0;
-        this.assetsTotal = 0;
-        this.assetErrors = [];
-
-        this.preloadAssets();
-    }
-
-    preloadAssets() {
-        if (this.assetsStarted) return;
-        this.assetsStarted = true;
-
-        const data = window.GameData || {};
-        const audio = data.assets && data.assets.audio ? Object.values(data.assets.audio) : [];
-        const uniqueAssets = [...new Set(audio.filter(Boolean))];
-
-        this.assetsTotal = uniqueAssets.length;
-        if (this.assetsTotal === 0) {
-            this.loadingProgress = 1;
-            return;
-        }
-
-        uniqueAssets.forEach((src) => {
-            let settled = false;
-            const done = (error) => {
-                if (settled) return;
-                settled = true;
-                if (error) this.assetErrors.push(src);
-                this.assetsLoaded += 1;
-            };
-
-            const audioElement = new Audio();
-            audioElement.preload = 'auto';
-            audioElement.oncanplaythrough = () => done(false);
-            audioElement.onerror = () => done(true);
-            audioElement.src = src;
-            audioElement.load();
-
-            // Áudio pode demorar/ser bloqueado em alguns navegadores. Não travar o jogo por isso.
-            setTimeout(() => {
-                if (audioElement.readyState < 2) done(true);
-            }, 2500);
-        });
     }
 
     update() {
         const elapsed = Date.now() - this.startTime;
-        const assetProgress = this.assetsTotal === 0 ? 1 : Math.min(this.assetsLoaded / this.assetsTotal, 1);
-        const timeProgress = Math.min(elapsed / this.minimumDuration, 1);
-        this.loadingProgress = Math.min(assetProgress, timeProgress);
+        this.loadingProgress = Math.min(elapsed / this.minimumDuration, 1);
 
         if (this.loadingProgress < 0.3) {
             this.loadingText = 'Carregando recursos...';
@@ -67,10 +24,10 @@ class LoadingScreen {
         } else if (this.loadingProgress < 0.95) {
             this.loadingText = 'Quase pronto...';
         } else {
-            this.loadingText = this.assetErrors.length ? 'Pronto com trilha alternativa!' : 'Pronto!';
+            this.loadingText = 'Pronto!';
         }
 
-        return assetProgress >= 1 && timeProgress >= 1;
+        return this.loadingProgress >= 1;
     }
 
     draw() {

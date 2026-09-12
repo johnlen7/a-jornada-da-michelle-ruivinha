@@ -1,8 +1,12 @@
 # 🚀 Plano de Upgrades — A Jornada da Michelle Ruivinha
 
-Plano derivado da [auditoria](AUDITORIA.md). Cada frente virou uma **change do OpenSpec**
-em `openspec/changes/`, com proposta, specs de comportamento e lista de tarefas prontas
-para implementar.
+Plano derivado da [auditoria](AUDITORIA.md). Cada frente virou uma **change do OpenSpec**,
+com proposta, specs de comportamento, decisões de desenho e lista de tarefas — implementada,
+verificada e arquivada em `openspec/changes/archive/`. As specs de comportamento continuam
+vivas em `openspec/specs/`, agora como o contrato vigente do jogo.
+
+> ✅ **Status: as sete changes foram implementadas.** Veja a tabela de métricas no fim
+> deste documento para o resultado medido de cada uma.
 
 ---
 
@@ -80,24 +84,32 @@ expandir-conteudo-orientado-a-dados  (independente; depois de corrigir-fluxo-das
 
 ---
 
-## Como trabalhar cada change
+## Como trabalhar uma change (referência para a próxima)
+
+As sete changes deste plano já foram implementadas e arquivadas — não há nenhuma em
+aberto. Para uma próxima rodada de upgrades, o caminho é o mesmo:
 
 ```bash
+# propor uma change nova (cria proposal, specs, design e tasks)
+npx @fission-ai/openspec@1 new change "nome-da-mudanca"
+
 # ver tudo que está em aberto
 npx @fission-ai/openspec@1 list
 
 # ler uma proposta específica
-npx @fission-ai/openspec@1 show otimizar-carregamento-de-midia
+npx @fission-ai/openspec@1 show nome-da-mudanca
 
 # validar antes de implementar
 npx @fission-ai/openspec@1 validate --all --strict
 
 # depois de implementar, arquivar (as specs viram o contrato oficial em openspec/specs/)
-npx @fission-ai/openspec@1 archive otimizar-carregamento-de-midia
+npx @fission-ai/openspec@1 archive nome-da-mudanca
 ```
 
 Dentro do Claude Code, os fluxos `/opsx:propose`, `/opsx:apply` e `/opsx:archive` fazem o
-mesmo caminho de forma guiada.
+mesmo caminho de forma guiada. As specs já arquivadas de cada capacidade do jogo (áudio,
+progressão de fases, acessibilidade, entrega, PWA, conteúdo das temporadas) estão em
+`openspec/specs/` e servem de referência de comportamento para qualquer mudança futura.
 
 ---
 
@@ -116,13 +128,19 @@ Ideias boas que **não** entraram no plano, para não inflar o projeto:
 
 ## Como saber se deu certo
 
-| Métrica | Hoje | Meta |
-| --- | --- | --- |
-| Bytes baixados no primeiro carregamento | ~28 MB | < 1 MB |
-| Tamanho do repositório | ~45 MB | < 5 MB |
-| Arquivos HTML na raiz | 11 | 2 |
-| Formas de sair da fase de obstáculos no celular | 0 | ≥ 1 |
-| Diálogo navegável só por teclado | não | sim |
-| Jogável sem internet | não | sim |
-| Erros de JavaScript no console | 0 | 0 (mantido) |
-| Taxa de quadros | 60 fps | 60 fps (mantido) |
+| Métrica | Antes | Meta | **Depois de implementado** |
+| --- | --- | --- | --- |
+| Bytes baixados no primeiro carregamento | ~28 MB | < 1 MB | **~169 KB** (medido, Playwright) |
+| Tamanho do repositório (sem `.git`/`node_modules`) | ~45 MB | < 5 MB | **~3,6 MB** |
+| Arquivos HTML na raiz | 11 | 2 | **2** (`index.html`, `jogo.html`) |
+| Formas de sair da fase de obstáculos no celular | 0 | ≥ 1 | **2** (botão 🚪 Sair com confirmação, e ESC no teclado) |
+| Diálogo navegável só por teclado | não | sim | **sim** — foco entra, Tab fica contido, ESC fecha o dispensável |
+| Jogável sem internet | não | sim | **sim** — instalável (PWA) e offline a partir da 2ª visita |
+| Erros de JavaScript no console | 0 | 0 (mantido) | **0** |
+| Taxa de quadros | 60 fps | 60 fps (mantido) | **60 fps** |
+| Conteúdo mal configurado trava o jogo | sim (silenciosamente) | não | **não** — avisa no console, fase fica sem interação, resto do jogo funciona |
+| Nº de fases por temporada assumido pelo motor | fixo (4) | livre | **livre** — testado com 5 fases numa temporada |
+| Testes automatizados | 0 | ≥ 1 suíte | **15 testes** (`tests/smoke.spec.js`), rodando em CI a cada push |
+
+Todas as linhas acima têm verificação automatizada em `npm test` (Playwright) ou foram
+medidas diretamente durante a implementação — nenhum número é estimado.

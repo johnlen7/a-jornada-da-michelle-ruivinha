@@ -34,7 +34,13 @@
     //   'question' → fase de pergunta (andando até o objeto e interagindo)
     //   'runner'   → fase de obstáculos (desviar até chegar ao altar)
     //   'final'    → o grande momento no altar
+    // `scene` liga a fase a uma cena desenhada em código (`src/scenes.js`,
+    // registradas em `SceneRenderer.SCENES`); a fase 'runner' não usa `scene`,
+    // ela tem seu próprio desenho.
     // `interactX/interactY` = onde fica o ponto de interação dentro da fase.
+    // `bounds` limita onde a personagem pode andar dentro da fase — omita
+    // para usar o limite padrão do motor. A fase 'runner' tem seus próprios
+    // limites (a pista) e ignora `bounds`.
     // ------------------------------------------------------------------------
     const levels = [
         {
@@ -42,18 +48,24 @@
             name: 'Salão de Festas',
             kind: 'question',
             questionId: 'local-festa',
+            scene: 'hall',
             interactX: 400,
             interactY: 360,
-            music: 's2-hall'
+            interactObject: 'cakeStand',
+            music: 's2-hall',
+            bounds: { minX: 24, maxX: 776, minY: 390, maxY: 580 }
         },
         {
             id: 'atelie',
             name: 'Ateliê da Noiva',
             kind: 'question',
             questionId: 'vestido-detalhe',
+            scene: 'atelier',
             interactX: 560,
             interactY: 350,
-            music: 's2-atelier'
+            interactObject: 'mannequin',
+            music: 's2-atelier',
+            bounds: { minX: 24, maxX: 776, minY: 410, maxY: 580 }
         },
         {
             id: 'caminho-altar',
@@ -65,9 +77,12 @@
             id: 'altar-jardim',
             name: 'Altar do Jardim',
             kind: 'final',
+            scene: 'altar',
             interactX: 400,
             interactY: 250,
-            music: 's2-altar'
+            interactObject: null,
+            music: 's2-altar',
+            bounds: { minX: 24, maxX: 776, minY: 250, maxY: 580 }
         }
     ];
 
@@ -123,7 +138,10 @@
 
     // ------------------------------------------------------------------------
     // 💍 O GRANDE MOMENTO (no Altar do Jardim)
-    // Qualquer opção aceita leva ao final feliz — como deve ser. ❤️
+    // `acceptIndex: null` significa que QUALQUER opção leva ao final feliz —
+    // como deve ser nesta temporada. ❤️ (Compare com `gameData.js`, onde
+    // `acceptIndex` é um índice específico e as demais opções pedem para
+    // tentar de novo.)
     // ------------------------------------------------------------------------
     const finale = {
         title: '💍 No Altar 💍',
@@ -132,18 +150,25 @@
             'Aceito, para sempre ❤️',
             'Óbvio que sim! 💕'
         ],
+        acceptIndex: null,
+        rejectText: '',
+        acceptedText: 'PARA SEMPRE! ❤️❤️❤️',
         epilogueTitle: '💒 Vem aí o casamento! 💒',
         epilogueLines: [
             'Duas temporadas de amor, magia e churros...',
             'e o próximo capítulo a gente escreve na vida real. ❤️'
-        ]
+        ],
+        nextSeason: null,
+        nextSeasonLabel: ''
     };
 
     window.Season2Data = {
         version: '2.0.0',
         seasonId: 's2',
         seasonName: 'Temporada 2 — O Caminho do Casamento',
+        theme: 's2',
         mapName: 'Vila do Casamento 💒',
+        mapMusic: 's2-map',
         storageKey: 'michelleGameProgress.s2.v1',
         mapLocations,
         levels,

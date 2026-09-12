@@ -9,23 +9,11 @@
     const INTERACT_RADIUS = 70;
     const MAP_ENTER_RADIUS = 62;
 
-    // Limites de movimento por fase (evita andar "na parede")
-    const LEVEL_BOUNDS = {
-        s1: [
-            { minX: 24, maxX: 776, minY: 405, maxY: 580 }, // Hogwarts
-            { minX: 24, maxX: 776, minY: 425, maxY: 580 }, // Central Perk
-            { minX: 24, maxX: 776, minY: 395, maxY: 580 }, // Caminho do Forte
-            { minX: 24, maxX: 776, minY: 455, maxY: 580 }  // Forte
-        ],
-        s2: [
-            { minX: 24, maxX: 776, minY: 390, maxY: 580 }, // Salão
-            { minX: 24, maxX: 776, minY: 410, maxY: 580 }, // Ateliê
-            null,                                         // Runner (próprios limites)
-            { minX: 24, maxX: 776, minY: 250, maxY: 580 }  // Altar
-        ]
-    };
-
     const MAP_BOUNDS = { minX: 24, maxX: 776, minY: 24, maxY: 580 };
+
+    // Limite aplicado a uma fase que não declara `bounds` no arquivo de
+    // conteúdo — mantém a personagem dentro da área visível da cena.
+    const DEFAULT_LEVEL_BOUNDS = { minX: 24, maxX: 776, minY: 24, maxY: 580 };
 
     class GameManager {
         constructor() {
@@ -57,6 +45,14 @@
             this.keys = {};
             this.lastInteractionAt = 0;
 
+            // Estado do diálogo/janela modal atualmente aberto (pergunta, momento
+            // final, epílogo, desfechos do runner) — usado para conter o foco por
+            // Tab e decidir se ESC fecha ou não.
+            this.activeModal = null;
+            this.modalDismissible = true;
+            this.modalOnDismiss = null;
+            this.modalPreviousFocus = null;
+
             this.dom = {
                 ui: document.getElementById('ui'),
                 soundToggle: document.getElementById('soundToggle'),
@@ -75,8 +71,13 @@
                 seasonSelect: document.getElementById('seasonSelect'),
                 season1Btn: document.getElementById('season1Btn'),
                 season2Btn: document.getElementById('season2Btn'),
-                fireworks: document.getElementById('fireworks')
+                fireworks: document.getElementById('fireworks'),
+                runnerExitBtn: document.getElementById('runnerExitBtn')
             };
+
+            // Problemas de conteúdo (questionId ou scene não encontrados) já
+            // avisados, para não repetir o mesmo aviso a cada quadro.
+            this.warnedContentIssues = new Set();
 
             const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
             this.hintText = coarse ? 'Toque em AÇÃO para interagir' : 'Pressione ESPAÇO para interagir';
@@ -99,64 +100,14 @@
         // --------------------------------------------------------------------
         // Configuração das temporadas
         // --------------------------------------------------------------------
+        // O motor não conhece nenhuma temporada em particular — só clona o
+        // conteúdo declarado em src/data/*.js. Acrescentar uma temporada nova
+        // é: escrever um arquivo de conteúdo no mesmo formato e citar o id
+        // aqui.
         static seasonData(id) {
-            if (id === 's1') return GameManager.normalizeSeason1(window.GameData);
-            if (id === 's2') return GameManager.normalizeSeason2(window.Season2Data);
-            return null;
-        }
-
-        // Adapta os dados originais da T1 para o formato unificado
-        static normalizeSeason1(data) {
-            const clone = JSON.parse(JSON.stringify(data));
-            const interact = [
-                { x: 360, y: 380, object: 'sortingHat', music: 'hogwarts' },
-                { x: 400, y: 410, object: 'mug', music: 'centralperk' },
-                { x: 600, y: 480, object: 'churrosCart', music: 's1-path' },
-                { x: 400, y: 440, object: null, music: 's1-fort', spawnY: 540 }
-            ];
-            clone.levels = clone.levels.map((level, i) => ({
-                id: level.id,
-                name: level.name,
-                kind: i < 3 ? 'question' : 'final',
-                questionId: level.questionId || null,
-                interactX: interact[i].x,
-                interactY: interact[i].y,
-                interactObject: interact[i].object,
-                music: interact[i].music,
-                spawnY: interact[i].spawnY || null
-            }));
-            clone.theme = 's1';
-            clone.mapName = 'Vila Mágica do Amor ❤️';
-            clone.mapMusic = 's1-map';
-            clone.runner = null;
-            clone.finale = {
-                title: '💍 O Grande Momento 💍',
-                text: 'Quer casar comigo?',
-                options: ['Sim ❤️', 'Não'],
-                acceptIndex: 0,
-                rejectText: 'Nan nan ni na não! Tenta de novo!',
-                acceptedText: 'SIM! ❤️❤️❤️',
-                epilogueTitle: '💖 Parabéns! 💖',
-                epilogueLines: ['Não é fim de jogo...', 'é o começo de uma nova jornada ❤️'],
-                nextSeason: 's2',
-                nextSeasonLabel: '💒 Ir para a Temporada 2'
-            };
-            return clone;
-        }
-
-        static normalizeSeason2(data) {
-            const clone = JSON.parse(JSON.stringify(data));
-            const objects = { 'salao-festas': 'cakeStand', atelie: 'mannequin' };
-            clone.levels = clone.levels.map((level) => ({
-                ...level,
-                interactObject: objects[level.id] || null
-            }));
-            clone.theme = 's2';
-            clone.mapMusic = 's2-map';
-            clone.finale.acceptIndex = null; // qualquer resposta leva ao final feliz
-            clone.finale.acceptedText = 'PARA SEMPRE! ❤️❤️❤️';
-            clone.finale.nextSeason = null;
-            return clone;
+            const source = id === 's1' ? window.GameData : id === 's2' ? window.Season2Data : null;
+            if (!source) return null;
+            return JSON.parse(JSON.stringify(source));
         }
 
         configureSeason(id) {
@@ -169,17 +120,51 @@
             this.gameState.runnerDone = false;
             this.gameState.finalAccepted = false;
 
+            this.validateSeasonContent(id, data);
             this.loadProgress();
             this.markNextLocation();
         }
 
+        // Confere a consistência do conteúdo declarado e avisa no console —
+        // sem impedir o resto do jogo de funcionar. Cada problema aponta a
+        // temporada, a fase e o campo envolvido, para ser fácil de corrigir
+        // em src/data/*.js.
+        validateSeasonContent(id, data) {
+            const warn = (message) => console.warn(`[A Jornada de Michelle] Temporada "${id}": ${message}`);
+
+            if (data.levels.length !== data.mapLocations.length) {
+                warn(
+                    `${data.levels.length} fase(s) declaradas em "levels", mas ${data.mapLocations.length} ` +
+                    'ponto(s) em "mapLocations" — as duas listas precisam ter o mesmo tamanho, na mesma ordem.'
+                );
+            }
+
+            data.levels.forEach((level) => {
+                if (level.kind === 'question' && !data.questions.some((q) => q.id === level.questionId)) {
+                    warn(`fase "${level.name}" aponta para a pergunta "${level.questionId}", que não existe em "questions".`);
+                }
+                if ((level.kind === 'question' || level.kind === 'final') && (level.interactX == null || level.interactY == null)) {
+                    warn(`fase "${level.name}" (tipo "${level.kind}") não declara interactX/interactY.`);
+                }
+                if (level.kind !== 'runner' && level.scene && !SceneRenderer.SCENES[level.scene]) {
+                    warn(`fase "${level.name}" declara scene "${level.scene}", que não está registrada em SceneRenderer.SCENES.`);
+                }
+                if (level.kind !== 'runner' && !level.scene) {
+                    warn(`fase "${level.name}" (tipo "${level.kind}") não declara "scene" — nada será desenhado dentro dela.`);
+                }
+            });
+
+            if (data.levels.some((l) => l.kind === 'runner') && !data.runner) {
+                warn('há uma fase do tipo "runner" em "levels", mas a temporada não declara configuração em "runner".');
+            }
+        }
+
         markNextLocation() {
             if (!this.season) return;
-            this.season.mapLocations.forEach((loc, i) => {
+            this.season.mapLocations.forEach((loc) => {
                 loc.isNext = false;
             });
             for (let i = 0; i < this.season.levels.length; i++) {
-                const level = this.season.levels[i];
                 const done = this.isLevelComplete(i);
                 if (!done) {
                     if (this.season.mapLocations[i] && this.season.mapLocations[i].unlocked) {
@@ -194,12 +179,50 @@
             const level = this.season.levels[index];
             if (!level) return false;
             if (level.kind === 'question') {
-                const qIndex = this.season.questions.findIndex((q) => q.id === level.questionId);
-                return qIndex >= 0 && this.gameState.questionsAnswered[qIndex];
+                const resolved = this.resolveLevelQuestion(level);
+                return Boolean(resolved) && this.gameState.questionsAnswered[resolved.index];
             }
             if (level.kind === 'runner') return this.gameState.runnerDone;
             if (level.kind === 'final') return this.gameState.finalAccepted;
             return false;
+        }
+
+        // Liga uma fase do tipo pergunta ao seu conteúdo. Devolve `null` (em vez
+        // de deixar circular um índice -1) quando o `questionId` declarado na
+        // fase não existe em `season.questions` — conteúdo mal configurado não
+        // pode travar a fase em silêncio, então avisa uma única vez no console.
+        resolveLevelQuestion(level) {
+            if (!level || level.kind !== 'question') return null;
+            const index = this.season.questions.findIndex((q) => q.id === level.questionId);
+            if (index < 0) {
+                this.warnMissingQuestion(level);
+                return null;
+            }
+            return { index, question: this.season.questions[index] };
+        }
+
+        warnMissingQuestion(level) {
+            const key = `${this.seasonId}:${level.id}`;
+            if (this.warnedContentIssues.has(key)) return;
+            this.warnedContentIssues.add(key);
+            console.warn(
+                `[A Jornada de Michelle] A fase "${level.name}" (temporada "${this.seasonId}") ` +
+                `aponta para a pergunta "${level.questionId}", que não existe em season.questions. ` +
+                'A fase fica sem interação até o questionId ser corrigido no arquivo de conteúdo.'
+            );
+        }
+
+        // Mesma ideia de warnMissingQuestion, para quando `level.scene` não
+        // está registrada em SceneRenderer.SCENES — a fase fica sem desenho,
+        // mas a saída pela porta e a navegação continuam funcionando.
+        warnMissingScene(level) {
+            const key = `${this.seasonId}:${level.id}:scene`;
+            if (this.warnedContentIssues.has(key)) return;
+            this.warnedContentIssues.add(key);
+            console.warn(
+                `[A Jornada de Michelle] A fase "${level.name}" (temporada "${this.seasonId}") ` +
+                `declara scene "${level.scene}", que não está registrada em SceneRenderer.SCENES.`
+            );
         }
 
         unlockAfter(index) {
@@ -234,6 +257,18 @@
                 if (!raw) return;
                 const progress = JSON.parse(raw);
 
+                // Progresso de uma versão de conteúdo diferente pode não bater
+                // posição a posição com as fases/perguntas atuais — melhor
+                // recomeçar a temporada do que aplicar progresso torto.
+                if (progress.version !== this.season.version) {
+                    console.warn(
+                        `[A Jornada de Michelle] Progresso salvo da temporada "${this.seasonId}" está na ` +
+                        `versão "${progress.version}", mas o conteúdo atual é a versão "${this.season.version}". ` +
+                        'Descartando o progresso salvo e recomeçando esta temporada do início.'
+                    );
+                    return;
+                }
+
                 if (Array.isArray(progress.questionsAnswered)) {
                     this.gameState.questionsAnswered = this.gameState.questionsAnswered
                         .map((_, i) => Boolean(progress.questionsAnswered[i]));
@@ -255,8 +290,10 @@
                 const data = GameManager.seasonData(id);
                 const raw = window.localStorage.getItem(data.storageKey);
                 if (!raw) return false;
-                return Boolean(JSON.parse(raw).finalAccepted);
-            } catch (error) {
+                const progress = JSON.parse(raw);
+                if (progress.version !== data.version) return false;
+                return Boolean(progress.finalAccepted);
+            } catch {
                 return false;
             }
         }
@@ -284,6 +321,20 @@
                 if (this.isLoading) return;
                 this.keys[event.code] = true;
                 await this.initAudioAfterGesture();
+
+                // Com um diálogo aberto, Tab fica contido nele e ESC decide por
+                // precedência (fecha se for dispensável). As teclas de
+                // movimento/interação do jogo não competem com os controles do
+                // diálogo nem com a ativação nativa de botão por Espaço/Enter.
+                if (this.activeModal) {
+                    if (event.code === 'Tab') {
+                        this.trapModalFocus(event);
+                    } else if (event.code === 'Escape' && this.modalDismissible) {
+                        event.preventDefault();
+                        this.dismissActiveModal();
+                    }
+                    return;
+                }
 
                 if (['Space', 'Enter', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) {
                     event.preventDefault();
@@ -371,6 +422,13 @@
             ['pointerup', 'pointerleave', 'pointercancel'].forEach((type) => {
                 interactBtn.addEventListener(type, () => interactBtn.classList.remove('active'));
             });
+
+            // Botão de sair da fase de obstáculos — único caminho de saída por
+            // toque, deliberadamente longe do D-pad e do botão AÇÃO para não
+            // ser acionado sem querer.
+            if (this.dom.runnerExitBtn) {
+                this.dom.runnerExitBtn.addEventListener('click', () => this.confirmQuitRunner());
+            }
         }
 
         // --------------------------------------------------------------------
@@ -404,6 +462,7 @@
         }
 
         backToSeasonSelect() {
+            if (this.activeModal === this.dom.finalMessage) this.closeModal();
             this.dom.finalMessage.style.display = 'none';
             this.dom.ui.classList.remove('runner-mode');
             this.gameState.screen = 'season';
@@ -416,7 +475,7 @@
             this.gameState.currentLevel = index;
 
             if (level.kind === 'runner') {
-                this.startRunner(level);
+                this.startRunner();
                 return;
             }
 
@@ -441,8 +500,9 @@
         playMusicForCurrentScreen() {
             const screen = this.gameState.screen;
             if (screen === 'map') this.audioManager.playBackgroundMusic(this.season.mapMusic);
-            else if (screen === 'level') this.audioManager.playBackgroundMusic(this.season.levels[this.gameState.currentLevel].music);
-            else if (screen === 'runner') this.audioManager.playBackgroundMusic('s2-runner');
+            else if (screen === 'level' || screen === 'runner') {
+                this.audioManager.playBackgroundMusic(this.season.levels[this.gameState.currentLevel].music);
+            }
         }
 
         // --------------------------------------------------------------------
@@ -476,9 +536,9 @@
 
                 this.audioManager.playInteractSound();
                 if (level.kind === 'question') {
-                    const qIndex = this.season.questions.findIndex((q) => q.id === level.questionId);
-                    if (qIndex >= 0 && !this.gameState.questionsAnswered[qIndex]) {
-                        this.showQuestion(qIndex);
+                    const resolved = this.resolveLevelQuestion(level);
+                    if (resolved && !this.gameState.questionsAnswered[resolved.index]) {
+                        this.showQuestion(resolved.index);
                     }
                 } else if (level.kind === 'final' && !this.gameState.finalAccepted) {
                     this.showFinale();
@@ -513,7 +573,7 @@
         // --------------------------------------------------------------------
         // Diálogos (perguntas, final, runner)
         // --------------------------------------------------------------------
-        showDialog(title, text, options, resultText = '') {
+        showDialog(title, text, options, resultText = '', { dismissible = true } = {}) {
             this.gameState.canMove = false;
             this.gameState.interactionActive = true;
             this.dom.interactionHint.style.display = 'none';
@@ -531,6 +591,10 @@
             });
 
             this.dom.questionDialog.style.display = 'block';
+            this.openModal(this.dom.questionDialog, {
+                dismissible,
+                onDismiss: dismissible ? () => this.hideDialog() : null
+            });
         }
 
         hideDialog() {
@@ -538,6 +602,75 @@
             this.dom.interactionHint.style.display = 'none';
             this.gameState.canMove = true;
             this.gameState.interactionActive = false;
+            if (this.activeModal === this.dom.questionDialog) {
+                this.closeModal();
+            }
+        }
+
+        // ---- Foco e contenção para qualquer janela modal do jogo ----------
+
+        // Elementos que podem receber foco por Tab dentro de um contêiner.
+        getModalFocusables(container) {
+            return Array.from(
+                container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+            ).filter((el) => !el.disabled && el.offsetParent !== null);
+        }
+
+        // Guarda o foco anterior, registra o contêiner como modal ativo e move
+        // o foco para dentro dele. `dismissible` decide se ESC fecha sozinho;
+        // `onDismiss` é chamado quando isso acontece.
+        openModal(container, { dismissible = true, onDismiss = null } = {}) {
+            this.activeModal = container;
+            this.modalDismissible = dismissible;
+            this.modalOnDismiss = onDismiss;
+            this.modalPreviousFocus = document.activeElement;
+
+            const focusables = this.getModalFocusables(container);
+            const target = focusables[0] || container;
+            // Um quadro de espera: o conteúdo (título, texto, botões) acabou de
+            // ser montado, e o navegador precisa reconhecer os elementos antes
+            // de conseguir focá-los.
+            requestAnimationFrame(() => target.focus());
+        }
+
+        // Fecha o modal atual e devolve o foco a quem o tinha antes de abrir.
+        closeModal() {
+            const previous = this.modalPreviousFocus;
+            this.activeModal = null;
+            this.modalDismissible = true;
+            this.modalOnDismiss = null;
+            this.modalPreviousFocus = null;
+            if (previous && typeof previous.focus === 'function' && document.contains(previous)) {
+                previous.focus();
+            }
+        }
+
+        // ESC num modal dispensável: fecha e roda o efeito colateral registrado.
+        dismissActiveModal() {
+            const onDismiss = this.modalOnDismiss;
+            this.closeModal();
+            if (onDismiss) onDismiss();
+        }
+
+        // Tab/Shift+Tab só circulam entre os controles do modal ativo.
+        trapModalFocus(event) {
+            if (!this.activeModal) return;
+            const focusables = this.getModalFocusables(this.activeModal);
+            if (!focusables.length) return;
+
+            event.preventDefault();
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const current = document.activeElement;
+            const currentIndex = focusables.indexOf(current);
+
+            let nextIndex;
+            if (event.shiftKey) {
+                nextIndex = current === first || currentIndex < 0 ? focusables.length - 1 : currentIndex - 1;
+            } else {
+                nextIndex = current === last || currentIndex < 0 ? 0 : currentIndex + 1;
+            }
+            focusables[nextIndex].focus();
         }
 
         showQuestion(qIndex) {
@@ -638,6 +771,7 @@
                 nextBtn.className = 'option-btn';
                 nextBtn.textContent = finale.nextSeasonLabel;
                 nextBtn.addEventListener('click', () => {
+                    if (this.activeModal === this.dom.finalMessage) this.closeModal();
                     this.dom.finalMessage.style.display = 'none';
                     this.selectSeason(finale.nextSeason);
                 });
@@ -651,6 +785,9 @@
             this.dom.finalActions.appendChild(menuBtn);
 
             this.dom.finalMessage.style.display = 'block';
+            // Epílogo exige uma escolha (próxima temporada ou voltar ao início);
+            // ESC não fecha sozinho.
+            this.openModal(this.dom.finalMessage, { dismissible: false });
         }
 
         startFireworks() {
@@ -673,7 +810,7 @@
         // --------------------------------------------------------------------
         // RUNNER — fase de obstáculos "Caminho do Altar"
         // --------------------------------------------------------------------
-        startRunner(level) {
+        startRunner() {
             const config = this.season.runner;
             this.runner = {
                 title: config.title,
@@ -701,12 +838,29 @@
             this.gameState.playerDirection = 'right';
             this.dom.ui.classList.add('runner-mode');
             this.updateLevelIndicator();
-            this.audioManager.playBackgroundMusic('s2-runner');
+            this.audioManager.playBackgroundMusic(this.season.levels[this.gameState.currentLevel].music);
         }
 
         quitRunner() {
             this.runner = null;
             this.exitLevel();
+        }
+
+        // Acionado pelo botão de sair na tela (ou por toque). Confirma antes de
+        // abandonar a corrida, para um toque sem querer não jogar fora o
+        // progresso da tentativa atual. ESC continua saindo direto — é um gesto
+        // deliberado que só existe em teclado físico.
+        confirmQuitRunner() {
+            if (this.gameState.screen !== 'runner' || this.gameState.interactionActive) return;
+
+            this.showDialog(
+                'Sair da corrida? 🚪',
+                'Você volta ao mapa e pode tentar de novo quando quiser.',
+                [
+                    { label: 'Sim, sair 🗺️', onPick: () => { this.hideDialog(); this.quitRunner(); } },
+                    { label: 'Continuar correndo 💪', onPick: () => this.hideDialog() }
+                ]
+            );
         }
 
         winRunner() {
@@ -717,6 +871,7 @@
             this.saveProgress();
             this.audioManager.playRunnerWinSound();
 
+            // Desfecho da corrida: exige uma escolha para prosseguir, ESC não fecha.
             this.showDialog('🎉 Caminho vencido! 🎉', 'A Michelle chegou ao altar inteira! O grande momento te espera...', [
                 {
                     label: 'Continuar ❤️',
@@ -726,17 +881,18 @@
                         this.exitLevel();
                     }
                 }
-            ]);
+            ], '', { dismissible: false });
         }
 
         failRunner() {
             this.audioManager.playHitSound();
+            // Desfecho da corrida: exige uma escolha para prosseguir, ESC não fecha.
             this.showDialog('Ops! 🕊️💥', 'Os preparativos derrubaram a Michelle no meio do caminho!', [
                 {
                     label: 'Tentar de novo 💪',
                     onPick: () => {
                         this.hideDialog();
-                        this.startRunner(this.season.levels[this.gameState.currentLevel]);
+                        this.startRunner();
                     }
                 },
                 {
@@ -747,7 +903,7 @@
                         this.exitLevel();
                     }
                 }
-            ]);
+            ], '', { dismissible: false });
         }
 
         updateRunner(t, dt) {
@@ -874,7 +1030,9 @@
             if (this.keys['ArrowUp'] || this.keys['KeyW']) { newY -= PLAYER_SPEED; state.playerDirection = 'up'; moved = true; }
             if (this.keys['ArrowDown'] || this.keys['KeyS']) { newY += PLAYER_SPEED; state.playerDirection = 'down'; moved = true; }
 
-            const bounds = state.screen === 'map' ? MAP_BOUNDS : LEVEL_BOUNDS[this.season.theme][state.currentLevel];
+            const bounds = state.screen === 'map'
+                ? MAP_BOUNDS
+                : (this.season.levels[state.currentLevel].bounds || DEFAULT_LEVEL_BOUNDS);
             if (bounds) {
                 newX = Math.max(bounds.minX, Math.min(newX, bounds.maxX));
                 newY = Math.max(bounds.minY, Math.min(newY, bounds.maxY));
@@ -907,8 +1065,8 @@
             } else if (state.screen === 'level') {
                 const level = this.season.levels[state.currentLevel];
                 if (level.kind === 'question') {
-                    const qIndex = this.season.questions.findIndex((q) => q.id === level.questionId);
-                    show = !this.gameState.questionsAnswered[qIndex] && this.isNearInteractPoint(level);
+                    const resolved = this.resolveLevelQuestion(level);
+                    show = Boolean(resolved) && !this.gameState.questionsAnswered[resolved.index] && this.isNearInteractPoint(level);
                 } else if (level.kind === 'final') {
                     show = !this.gameState.finalAccepted && this.isNearInteractPoint(level);
                 }
@@ -978,15 +1136,11 @@
             const level = this.season.levels[index];
             const interact = { x: level.interactX, y: level.interactY };
 
-            if (this.season.theme === 's1') {
-                if (index === 0) renderer.drawHogwartsRoom(t, interact);
-                else if (index === 1) renderer.drawCentralPerk(t, interact);
-                else if (index === 2) renderer.drawBeachPath(t, interact);
-                else renderer.drawFort(t, interact);
+            const drawScene = SceneRenderer.SCENES[level.scene];
+            if (drawScene) {
+                drawScene(renderer, t, interact);
             } else {
-                if (index === 0) renderer.drawHall(t, interact);
-                else if (index === 1) renderer.drawAtelier(t, interact);
-                else renderer.drawAltar(t, interact);
+                this.warnMissingScene(level);
             }
 
             renderer.drawExitDoor();

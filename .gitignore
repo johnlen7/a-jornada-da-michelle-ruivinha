@@ -14,3 +14,13 @@ node_modules/
 # Arquivos do sistema
 .DS_Store
 Thumbs.db
+
+# Dependências de desenvolvimento (lint e teste de fumaça — veja package.json)
+# package-lock.json É versionado de propósito, para instalações reprodutíveis.
+node_modules/
+
+# Artefatos do Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/

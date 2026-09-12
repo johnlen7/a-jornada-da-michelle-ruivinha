@@ -35,7 +35,7 @@
                 w: 48 + rand() * 8,
                 tone: rand()
             }));
-            this.roomDust = Array.from({ length: 14 }, (_, i) => ({ x: 90 + rand() * 620, y: 80 + rand() * 240, p: rand() * 6.28, s: 0.5 + rand() }));
+            this.roomDust = Array.from({ length: 14 }, () => ({ x: 90 + rand() * 620, y: 80 + rand() * 240, p: rand() * 6.28, s: 0.5 + rand() }));
             this.bookSpines = Array.from({ length: 42 }, (_, i) => ({
                 shelf: Math.floor(i / 14),
                 x: (i % 14) * 13,
@@ -106,7 +106,7 @@
             ctx.restore();
         }
 
-        driftingClouds(t, baseColor = '#FFFFFF') {
+        driftingClouds(t) {
             const speed = 0.006;
             const clouds = [
                 { x: 120, y: 70, s: 1.1 }, { x: 380, y: 48, s: 0.8 },
@@ -1375,7 +1375,7 @@
         this.R(328, 262, 4, 8, '#F8BBD0');
 
         // Quadros de croquis na parede
-        [[280, 90], [390, 90], [500, 90]].forEach(([fx, fy], i) => {
+        [[280, 90], [390, 90], [500, 90]].forEach(([fx, fy]) => {
             this.R(fx, fy, 70, 90, '#C9A227');
             this.R(fx + 5, fy + 5, 60, 80, '#FDFEFE');
             ctx.strokeStyle = '#AD1457';
@@ -1667,5 +1667,21 @@
             this.text(run.intro, W / 2, 130, 18, '#FFFFFF');
             ctx.restore();
         }
+    };
+
+    // Registro de cenas: liga o nome declarado em `scene` (nos arquivos de
+    // conteúdo de cada temporada, src/data/*.js) à função que a desenha.
+    // Acrescentar uma fase nova com cenário próprio é: escrever a função de
+    // desenho acima, registrá-la aqui, e citar o nome em `scene` no conteúdo.
+    // A fase 'runner' não usa este registro — ela tem seu próprio desenho
+    // (`drawRunner`), chamado direto pelo motor.
+    window.SceneRenderer.SCENES = {
+        'hogwarts-room': (renderer, t, interact) => renderer.drawHogwartsRoom(t, interact),
+        'central-perk': (renderer, t, interact) => renderer.drawCentralPerk(t, interact),
+        'beach-path': (renderer, t, interact) => renderer.drawBeachPath(t, interact),
+        fort: (renderer, t, interact) => renderer.drawFort(t, interact),
+        hall: (renderer, t, interact) => renderer.drawHall(t, interact),
+        atelier: (renderer, t, interact) => renderer.drawAtelier(t, interact),
+        altar: (renderer, t, interact) => renderer.drawAltar(t, interact)
     };
 })(window);

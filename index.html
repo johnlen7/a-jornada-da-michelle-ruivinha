@@ -4,8 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A Jornada de Michelle</title>
+    <meta name="description" content="Uma aventura de amor em pixel-art 2D, em duas temporadas: o pedido de casamento e o caminho até o altar.">
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#1a1a2e">
+    <link rel="icon" href="assets/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🏰 A Jornada de Michelle 💒">
+    <meta property="og:description" content="Uma aventura de amor em pixel-art 2D, em duas temporadas: o pedido de casamento e o caminho até o altar.">
+    <meta property="og:image" content="assets/icons/social-preview.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="🏰 A Jornada de Michelle 💒">
+    <meta name="twitter:description" content="Uma aventura de amor em pixel-art 2D, em duas temporadas: o pedido de casamento e o caminho até o altar.">
+    <meta name="twitter:image" content="assets/icons/social-preview.jpg">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap');
+        @font-face {
+            font-family: 'Pixelify Sans';
+            src: url('assets/fonts/pixelify-sans.woff2') format('woff2-variations'),
+                 url('assets/fonts/pixelify-sans.woff2') format('woff2');
+            font-weight: 400 700;
+            font-style: normal;
+            font-display: swap;
+        }
 
         * {
             margin: 0;
@@ -21,7 +43,7 @@
             justify-content: center;
             padding: 24px;
             color: white;
-            font-family: 'Pixelify Sans', cursive;
+            font-family: 'Pixelify Sans', 'Courier New', ui-monospace, monospace;
             background: radial-gradient(circle at top, #2d1b69 0%, #16213e 42%, #0f1020 100%);
             overflow: hidden;
         }
@@ -102,7 +124,11 @@
         .play-button:focus-visible {
             transform: translateY(-4px) scale(1.02);
             filter: brightness(1.08);
-            outline: none;
+        }
+
+        .play-button:focus-visible {
+            outline: 3px solid #7CFC00;
+            outline-offset: 3px;
         }
 
         .notes {
@@ -110,6 +136,14 @@
             color: #bfc7ff;
             font-size: 0.95rem;
             line-height: 1.6;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .sparkles::before,
+            .sparkles::after {
+                animation: none;
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -123,7 +157,7 @@
             a jornada do pedido e o caminho do casamento.
         </p>
 
-        <a class="play-button" href="game_atualizado.html">
+        <a class="play-button" href="jogo.html">
             <span>✨</span>
             <span>Começar a Jornada</span>
         </a>
@@ -134,5 +168,7 @@
             No computador, use teclado. No celular, use o D-pad e o botão de ação que aparecem na tela.
         </p>
     </main>
+
+    <script src="src/pwa.js"></script>
 </body>
 </html>
